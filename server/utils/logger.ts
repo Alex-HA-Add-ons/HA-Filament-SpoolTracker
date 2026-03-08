@@ -17,7 +17,7 @@ class Logger {
     return level <= this.level;
   }
 
-  private formatMessage(level: string, component: string | undefined, message: string, ...args: any[]): string {
+  private formatMessage(level: string, component: string | undefined, message: string, ...args: unknown[]): string {
     const timestamp = new Date().toLocaleTimeString();
     const componentPrefix = component ? ` [${component}]` : '';
     const prefix = `[${timestamp}] ${level}${componentPrefix}`;
@@ -29,7 +29,7 @@ class Logger {
         } else if (typeof arg === 'object') {
           try {
             return JSON.stringify(arg, null, 2);
-          } catch (_e) {
+          } catch {
             return `[Object: ${Object.prototype.toString.call(arg)}]`;
           }
         } else {
@@ -41,55 +41,58 @@ class Logger {
     return `${prefix}: ${message}`;
   }
 
-  error(message: string, component?: any, ...args: any[]): void {
+  error(message: string, ...args: unknown[]): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      console.error(this.formatMessage('ERROR', component, message, ...args));
+      console.error(this.formatMessage('ERROR', undefined, message, ...args));
     }
   }
 
-  warn(message: string, component?: any, ...args: any[]): void {
+  warn(message: string, ...args: unknown[]): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(this.formatMessage('WARN', component, message, ...args));
+      console.warn(this.formatMessage('WARN', undefined, message, ...args));
     }
   }
 
-  info(message: string, component?: any, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.log(this.formatMessage('INFO', component, message, ...args));
+      console.log(this.formatMessage('INFO', undefined, message, ...args));
     }
   }
 
-  debug(message: string, component?: any, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      console.log(this.formatMessage('DEBUG', component, message, ...args));
+      console.log(this.formatMessage('DEBUG', undefined, message, ...args));
     }
   }
 
-  // Method to create component-specific logger using closure
   forComponent(component: string) {
     return {
-      error: (message: string, ...args: any[]) => this.error(message, component, ...args),
-      warn: (message: string, ...args: any[]) => this.warn(message, component, ...args),
-      info: (message: string, ...args: any[]) => this.info(message, component, ...args),
-      debug: (message: string, ...args: any[]) => this.debug(message, component, ...args)
+      error: (message: string, ...args: unknown[]) => {
+        if (this.shouldLog(LogLevel.ERROR)) console.error(this.formatMessage('ERROR', component, message, ...args));
+      },
+      warn: (message: string, ...args: unknown[]) => {
+        if (this.shouldLog(LogLevel.WARN)) console.warn(this.formatMessage('WARN', component, message, ...args));
+      },
+      info: (message: string, ...args: unknown[]) => {
+        if (this.shouldLog(LogLevel.INFO)) console.log(this.formatMessage('INFO', component, message, ...args));
+      },
+      debug: (message: string, ...args: unknown[]) => {
+        if (this.shouldLog(LogLevel.DEBUG)) console.log(this.formatMessage('DEBUG', component, message, ...args));
+      },
     };
   }
 }
 
-// Create logger instance based on environment
 const logLevel = process.env.LOG_LEVEL === 'debug' ? LogLevel.DEBUG :
                  process.env.LOG_LEVEL === 'warn' ? LogLevel.WARN :
                  process.env.LOG_LEVEL === 'error' ? LogLevel.ERROR :
                  LogLevel.INFO;
 
-// Create single logger instance
 const logger = new Logger(logLevel);
 
-// Factory function using closure
 export function LOG(component: string) {
   return logger.forComponent(component);
 }
 
-// Default logger instance (for backward compatibility)
 export { logger };
-export { LogLevel }; 
+export { LogLevel };

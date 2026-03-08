@@ -3,7 +3,12 @@ import { LOG } from '../../utils/logger';
 
 const logger = LOG('DB');
 
-let prismaClient: any = null;
+interface PrismaLike {
+  $connect(): Promise<void>;
+  $disconnect(): Promise<void>;
+}
+
+let prismaClient: PrismaLike | null = null;
 let isInitialized = false;
 let isDisabled = false;
 
@@ -26,7 +31,7 @@ export async function initializeConnections(): Promise<void> {
 
     logger.info('Initializing database connection...');
     const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
-    prismaClient = new PrismaClient({ adapter });
+    prismaClient = new PrismaClient({ adapter }) as PrismaLike;
     await prismaClient.$connect();
 
     isInitialized = true;
@@ -38,7 +43,7 @@ export async function initializeConnections(): Promise<void> {
   }
 }
 
-export function getPrismaClient(): any | null {
+export function getPrismaClient(): PrismaLike | null {
   if (isDisabled) return null;
   if (!prismaClient || !isInitialized) {
     return null;

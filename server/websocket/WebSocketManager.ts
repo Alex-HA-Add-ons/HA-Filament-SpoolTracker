@@ -1,3 +1,4 @@
+import http from 'http';
 import WebSocket from 'ws';
 import { WebSocketMessage, WebSocketRequest, WebSocketResponse } from '@ha-addon/types';
 import { LOG } from '../utils/logger';
@@ -15,7 +16,7 @@ export class WebSocketManager {
   private wss: WebSocket.Server;
   private clients: Map<string, WebSocketClient> = new Map();
 
-  constructor(server: any) {
+  constructor(server: http.Server) {
     this.wss = new WebSocket.Server({ server });
     this.setupWebSocketServer();
   }
@@ -54,7 +55,7 @@ export class WebSocketManager {
         this.clients.delete(clientId);
       });
 
-      ws.on('error', (error: any) => {
+      ws.on('error', (error: Error) => {
         logger.error('WebSocket error for client:', clientId, error);
         this.clients.delete(clientId);
       });

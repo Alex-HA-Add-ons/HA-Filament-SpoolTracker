@@ -15,15 +15,23 @@ export type EventMessage<E extends WsEventType = WsEventType> = {
   timestamp?: number;
 };
 
+type MessageHandler = (message: EventMessage) => void;
+
+interface PendingRequest {
+  resolve: (v: unknown) => void;
+  reject: (e: Error) => void;
+  timer: number;
+}
+
 interface WebSocketContextType {
   socket: WebSocket | null;
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
   sendMessage: (message: string | object) => void;
   subscribe: <E extends WsEventType | '*'>(
     type: E,
-    handler: (message: E extends '*' ? any : EventMessage<Extract<E, WsEventType>>) => void
+    handler: MessageHandler
   ) => () => void;
-  request: <T = any>(message: { type: string; data?: any }, timeoutMs?: number) => Promise<T>;
+  request: <T = unknown>(message: { type: string; data?: Record<string, unknown> }, timeoutMs?: number) => Promise<T>;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -31,7 +39,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   connectionStatus: 'disconnected',
   sendMessage: () => {},
   subscribe: () => () => {},
-  request: async () => (undefined as any),
+  request: () => Promise.reject(new Error('WebSocket not initialized')),
 });
 
 interface WebSocketProviderProps {
@@ -45,8 +53,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
   const reconnectTimeoutRef = useRef<number | null>(null);
   const shouldReconnectRef = useRef<boolean>(true);
   const currentSocketRef = useRef<WebSocket | null>(null);
-  const listenersRef = useRef<Map<string, Set<(message: any) => void>>>(new Map());
-  const pendingRequestsRef = useRef<Map<string, { resolve: (v: any) => void; reject: (e: any) => void; t: number }>>(new Map());
+  const listenersRef = useRef<Map<string, Set<MessageHandler>>>(new Map());
+  const pendingRequestsRef = useRef<Map<string, PendingRequest>>(new Map());
 
   useEffect(() => {
     shouldReconnectRef.current = true;
@@ -64,8 +72,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
       ws.addEventListener('message', (event: MessageEvent) => {
         try {
           const parsed = JSON.parse(event.data) as EventMessage;
-          const type = parsed?.type;
-          const msgId = (parsed as any)?.id as string | undefined;
+          const { type, id: msgId } = parsed;
 
           if (msgId && pendingRequestsRef.current.has(msgId)) {
             const entry = pendingRequestsRef.current.get(msgId)!;
@@ -77,8 +84,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
             const listeners = listenersRef.current.get(type);
             if (listeners) listeners.forEach(fn => { try { fn(parsed); } catch { /* handler error */ } });
           }
-          const anyLs = listenersRef.current.get('*');
-          if (anyLs) anyLs.forEach(fn => { try { fn(parsed); } catch { /* handler error */ } });
+          const wildcardListeners = listenersRef.current.get('*');
+          if (wildcardListeners) wildcardListeners.forEach(fn => { try { fn(parsed); } catch { /* handler error */ } });
         } catch { /* parse error */ }
       });
 
@@ -120,7 +127,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
 
   const subscribe = useCallback(<E extends WsEventType | '*'>(
     type: E,
-    handler: (message: any) => void
+    handler: MessageHandler
   ) => {
     let setForType = listenersRef.current.get(type);
     if (!setForType) {
@@ -136,7 +143,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
     };
   }, []);
 
-  const request = useCallback(async <T = any>(message: { type: string; data?: any }, timeoutMs: number = 10000): Promise<T> => {
+  const request = useCallback(async <T = unknown>(message: { type: string; data?: Record<string, unknown> }, timeoutMs: number = 10000): Promise<T> => {
     const ws = currentSocketRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       throw new Error('WebSocket not connected');
@@ -144,19 +151,19 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
     const id = `req_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const payload = { ...message, id };
     const p = new Promise<T>((resolve, reject) => {
-      const timeoutAt = window.setTimeout(() => {
+      const timer = window.setTimeout(() => {
         pendingRequestsRef.current.delete(id);
         reject(new Error(`WebSocket request timed out: ${message.type}`));
       }, timeoutMs);
-      pendingRequestsRef.current.set(id, { resolve, reject, t: timeoutAt as unknown as number });
+      pendingRequestsRef.current.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
     });
     ws.send(JSON.stringify(payload));
     try {
-      return await p as T;
+      return await p;
     } finally {
       const entry = pendingRequestsRef.current.get(id);
       if (entry) {
-        clearTimeout(entry.t);
+        clearTimeout(entry.timer);
         pendingRequestsRef.current.delete(id);
       }
     }
@@ -177,6 +184,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
   if (!context) {
@@ -185,6 +193,7 @@ export const useWebSocket = () => {
   return context;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWebSocketEvent = <E extends WsEventType>(type: E, handler: (message: EventMessage<E>) => void) => {
   const { subscribe } = useWebSocket();
   const handlerRef = useRef(handler);
@@ -192,10 +201,11 @@ export const useWebSocketEvent = <E extends WsEventType>(type: E, handler: (mess
     handlerRef.current = handler;
   });
   useEffect(() => {
-    return subscribe(type, (msg: EventMessage<WsEventType>) => handlerRef.current(msg as EventMessage<E>));
+    return subscribe(type, (msg: EventMessage) => handlerRef.current(msg as EventMessage<E>));
   }, [type, subscribe]);
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWebSocketRequest = () => {
   const { request } = useWebSocket();
   return request;

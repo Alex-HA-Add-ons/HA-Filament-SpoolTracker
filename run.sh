@@ -5,14 +5,14 @@ set -e
 DATABASE_URL=$(bashio::config 'database_url')
 LOG_LEVEL=$(bashio::config 'log_level')
 
-CLIENT_PORT=$(bashio::addon.port 5173)
+INGRESS_PORT=$(bashio::addon.ingress_port)
 ADDON_VERSION=$(bashio::addon.version)
 
 bashio::log.info "Starting HA Filament SpoolTracker v${ADDON_VERSION}..."
 
 export NODE_ENV=production
 export HOME_ASSISTANT=true
-export PORT="$CLIENT_PORT"
+export PORT="$INGRESS_PORT"
 export LOG_LEVEL="$LOG_LEVEL"
 export ADDON_VERSION="$ADDON_VERSION"
 export APP_ROOT="/app"

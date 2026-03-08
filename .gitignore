@@ -5,3 +5,4 @@ server/generated
 server/dist
 client/dist
 *.d.ts.map
+*.db

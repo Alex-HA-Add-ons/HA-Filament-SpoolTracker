@@ -1,0 +1,105 @@
+.spool-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: var(--transition-fast);
+}
+
+.spool-card.active {
+  border-color: var(--accent-primary);
+}
+
+.spool-card.low {
+  border-color: var(--warning-color);
+}
+
+.spool-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.spool-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.spool-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.spool-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spool-type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.spool-active-badge {
+  background: rgba(35, 134, 54, 0.2);
+  color: #3fb950;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.spool-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.spool-weight {
+  font-size: 14px;
+}
+
+.weight-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.weight-separator {
+  color: var(--text-muted);
+}
+
+.weight-total {
+  color: var(--text-secondary);
+}
+
+.spool-manufacturer {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.spool-card-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-height: 28px;
+}

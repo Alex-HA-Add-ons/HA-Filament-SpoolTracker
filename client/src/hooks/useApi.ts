@@ -1,5 +1,5 @@
-import api, { healthApi } from '@services/api';
+import api, { healthApi, spoolsApi, printJobsApi, printersApi, dashboardApi, haApi, settingsApi } from '@services/api';
 
 export function useApi() {
-  return { api, healthApi } as const;
+  return { api, healthApi, spoolsApi, printJobsApi, printersApi, dashboardApi, haApi, settingsApi } as const;
 }

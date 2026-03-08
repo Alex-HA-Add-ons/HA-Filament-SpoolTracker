@@ -8,7 +8,7 @@ LOG_LEVEL=$(bashio::config 'log_level')
 CLIENT_PORT=$(bashio::addon.port 5173)
 ADDON_VERSION=$(bashio::addon.version)
 
-bashio::log.info "Starting HA Add-on Boilerplate v${ADDON_VERSION}..."
+bashio::log.info "Starting HA Filament SpoolTracker v${ADDON_VERSION}..."
 
 export NODE_ENV=production
 export HOME_ASSISTANT=true

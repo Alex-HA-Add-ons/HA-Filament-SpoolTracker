@@ -1,5 +1,5 @@
 {
-  "name": "HA Add-on Boilerplate",
+  "name": "HA Filament SpoolTracker",
   "image": "ghcr.io/home-assistant/amd64-base:latest",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {

@@ -10,7 +10,7 @@
         "--build-arg",
         "BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest",
         "-t",
-        "local/ha-addon-boilerplate",
+        "local/ha-filament-spooltracker",
         "."
       ],
       "group": "build",

@@ -1,14 +1,10 @@
 import 'dotenv/config';
 import { LOG } from '../../utils/logger';
+import type { PrismaClient as PrismaClientType } from '../../generated/prisma/client';
 
 const logger = LOG('DB');
 
-interface PrismaLike {
-  $connect(): Promise<void>;
-  $disconnect(): Promise<void>;
-}
-
-let prismaClient: PrismaLike | null = null;
+let prismaClient: PrismaClientType | null = null;
 let isInitialized = false;
 let isDisabled = false;
 
@@ -31,7 +27,7 @@ export async function initializeConnections(): Promise<void> {
 
     logger.info('Initializing database connection...');
     const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
-    prismaClient = new PrismaClient({ adapter }) as PrismaLike;
+    prismaClient = new PrismaClient({ adapter }) as PrismaClientType;
     await prismaClient.$connect();
 
     isInitialized = true;
@@ -43,7 +39,7 @@ export async function initializeConnections(): Promise<void> {
   }
 }
 
-export function getPrismaClient(): PrismaLike | null {
+export function getPrismaClient(): PrismaClientType | null {
   if (isDisabled) return null;
   if (!prismaClient || !isInitialized) {
     return null;

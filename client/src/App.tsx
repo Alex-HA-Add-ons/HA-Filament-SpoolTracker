@@ -1,26 +1,28 @@
-import { useWebSocket, WebSocketProvider } from '@hooks/useWebSocket';
+import { useStoredState } from '@hooks/useStoredState';
+import TabNav from '@components/TabNav';
 import DashboardPage from '@pages/Dashboard';
+import SpoolsPage from '@pages/Spools';
+import PrintHistoryPage from '@pages/PrintHistory';
+import SettingsPage from '@pages/Settings';
 import './App.css';
 
-function AppContent() {
-  const { connectionStatus } = useWebSocket();
+const TABS = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'spools', label: 'Spools' },
+  { id: 'history', label: 'Print History' },
+  { id: 'settings', label: 'Settings' },
+];
+
+function App() {
+  const [activeTab, setActiveTab] = useStoredState('activeTab', 'dashboard');
   const version = __ADDON_VERSION__;
 
-  const getStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'green';
-      case 'connecting': return 'orange';
-      case 'error': return 'red';
-      default: return 'gray';
-    }
-  };
-
-  const getStatusText = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'Connected';
-      case 'connecting': return 'Connecting...';
-      case 'error': return 'Connection Error';
-      default: return 'Disconnected';
+  const renderPage = () => {
+    switch (activeTab) {
+      case 'spools': return <SpoolsPage />;
+      case 'history': return <PrintHistoryPage />;
+      case 'settings': return <SettingsPage />;
+      default: return <DashboardPage />;
     }
   };
 
@@ -28,46 +30,22 @@ function AppContent() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">HA Add-on Boilerplate</h1>
+          <h1 className="app-title">HA Filament SpoolTracker</h1>
           <div className="header-right">
             {version && <div className="version-badge">v{version}</div>}
-            <div className="connection-status">
-              <span className="status-dot" style={{ backgroundColor: getStatusColor() }}></span>
-              {getStatusText()}
-            </div>
           </div>
         </div>
       </header>
 
       <main className="app-main">
-        <DashboardPage />
+        <TabNav tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+        {renderPage()}
       </main>
 
       <footer className="app-footer">
-        <p>Home Assistant Add-on Boilerplate</p>
+        <p>HA Filament SpoolTracker</p>
       </footer>
     </div>
-  );
-}
-
-function App() {
-  const getWebSocketUrl = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname;
-    const port = window.location.port;
-    const isIngress = window.location.pathname.includes('/api/hassio_ingress/');
-
-    if (isIngress) {
-      const ingressPath = window.location.pathname.replace('/api/hassio_ingress/', '');
-      return `${protocol}//${host}:${port}/api/hassio_ingress/${ingressPath}`;
-    }
-    return `${protocol}//${host}:3001`;
-  };
-
-  return (
-    <WebSocketProvider url={getWebSocketUrl()}>
-      <AppContent />
-    </WebSocketProvider>
   );
 }
 

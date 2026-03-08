@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider     = "prisma-client"
   output       = "../generated/prisma"
@@ -19,4 +16,64 @@ model Setting {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("settings")
+}
+
+model Printer {
+  id           String   @id @default(uuid())
+  name         String
+  haDeviceId   String   @unique @map("ha_device_id")
+  entityPrefix String   @map("entity_prefix")
+  model        String?
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  printJobs PrintJob[]
+
+  @@map("printers")
+}
+
+model Spool {
+  id              String    @id @default(uuid())
+  name            String
+  filamentType    String    @map("filament_type")
+  color           String
+  colorHex        String?   @map("color_hex")
+  manufacturer    String?
+  initialWeight   Float     @map("initial_weight")
+  remainingWeight Float     @map("remaining_weight")
+  spoolWeight     Float?    @map("spool_weight")
+  diameter        Float     @default(1.75)
+  isActive        Boolean   @default(false) @map("is_active")
+  isArchived      Boolean   @default(false) @map("is_archived")
+  expirationDate  DateTime? @map("expiration_date")
+  purchaseDate    DateTime? @map("purchase_date")
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  printJobs PrintJob[]
+
+  @@map("spools")
+}
+
+model PrintJob {
+  id           String    @id @default(uuid())
+  printerId    String?   @map("printer_id")
+  spoolId      String?   @map("spool_id")
+  projectName  String    @map("project_name")
+  projectImage String?   @map("project_image")
+  filamentUsed Float?    @map("filament_used")
+  status       String    @default("in_progress")
+  startedAt    DateTime  @default(now()) @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  progress     Float?
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  printer Printer? @relation(fields: [printerId], references: [id])
+  spool   Spool?   @relation(fields: [spoolId], references: [id])
+
+  @@map("print_jobs")
 }

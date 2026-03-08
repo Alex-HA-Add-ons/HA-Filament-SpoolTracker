@@ -4,11 +4,12 @@ import path from 'path';
 import 'dotenv/config';
 
 import { initializeConnections, setupGracefulShutdown } from './database';
-import { WebSocketManager } from './websocket/WebSocketManager';
 import { ingressMiddleware } from './middleware/ingressMiddleware';
 import { requestLogger } from './middleware/requestLogger';
 import routes from './routes';
 import { LOG } from './utils/logger';
+import { startHAIntegration } from './services/haIntegration';
+import { startPeriodicChecks } from './services/notifications';
 
 const logger = LOG('SERVER');
 
@@ -55,8 +56,10 @@ async function startServer() {
   const server = app.listen(port, () => {
     logger.info(`Server running on port ${port}`);
 
-    const wsManager = new WebSocketManager(server);
-    app.locals.wsManager = wsManager;
+    startHAIntegration().catch((err) =>
+      logger.warn('HA integration failed to start:', err)
+    );
+    startPeriodicChecks();
 
     logger.info('Startup completed successfully');
   });

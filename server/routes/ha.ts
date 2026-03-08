@@ -113,17 +113,39 @@ router.get('/ha/entities/states', async (req: Request, res: Response) => {
             results[entityId] = null;
             return;
           }
-          const data = await response.json() as { state?: string; attributes?: Record<string, unknown> };
-          const state = data.state;
-          // Cover image entity: image URL is in attributes (entity_picture or "Entity picture")
+          const raw = await response.json() as Record<string, unknown>;
+          // Supervisor proxy may wrap: unwrap if needed
+          const data = (raw.data as Record<string, unknown>) ?? raw;
+          const state = data.state as string | undefined;
+          const attributes = data.attributes as Record<string, unknown> | undefined;
+          // Cover image entity: image URL is in attributes (key name varies by integration)
           if (entityId.endsWith('_cover_image')) {
-            const attrs = data.attributes ?? {};
-            const picture = (attrs.entity_picture as string) ?? (attrs['Entity picture'] as string);
+            const attrs = attributes ?? {};
+            let picture = (attrs.entity_picture as string) ?? (attrs['Entity picture'] as string);
+            if (!picture && typeof attrs === 'object') {
+              for (const v of Object.values(attrs)) {
+                if (typeof v === 'string' && (v.startsWith('/') || v.includes('image') || v.includes('picture'))) {
+                  picture = v;
+                  break;
+                }
+                if (v && typeof v === 'object' && !Array.isArray(v)) {
+                  const obj = v as Record<string, unknown>;
+                  const u = obj.url ?? obj.entity_picture ?? obj.entityPicture;
+                  if (typeof u === 'string') {
+                    picture = u;
+                    break;
+                  }
+                }
+              }
+            }
+            if (!picture && process.env.LOG_LEVEL === 'debug' && Object.keys(attrs).length > 0) {
+              logger.debug(`cover_image entity ${entityId} attributes keys: ${Object.keys(attrs).join(', ')}`);
+            }
             results[entityId] = picture ?? (state && state !== 'unknown' && state !== 'unavailable' ? state : null);
             return;
           }
           results[entityId] =
-            state === 'unknown' || state === 'unavailable' || state === undefined ? null : state;
+            state === 'unknown' || state === 'unavailable' || state === undefined ? null : (state ?? null);
         } catch {
           results[entityId] = null;
         }

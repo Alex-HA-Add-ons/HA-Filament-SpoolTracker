@@ -113,8 +113,14 @@ router.get('/ha/entities/states', async (req: Request, res: Response) => {
             results[entityId] = null;
             return;
           }
-          const data = await response.json() as { state?: string };
+          const data = await response.json() as { state?: string; attributes?: { entity_picture?: string } };
           const state = data.state;
+          // Cover image entity: state is often null; image URL is in attributes.entity_picture
+          if (entityId.endsWith('_cover_image') && (state == null || state === 'unknown' || state === 'unavailable')) {
+            const picture = data.attributes?.entity_picture;
+            results[entityId] = picture ?? null;
+            return;
+          }
           results[entityId] =
             state === 'unknown' || state === 'unavailable' || state === undefined ? null : state;
         } catch {

@@ -34,7 +34,13 @@ FROM $BUILD_FROM
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN apk add --no-cache nodejs npm bash curl python3 && rm -rf /var/cache/apk/*
+# Copy Node.js from build stage so native modules (better-sqlite3) match the exact runtime version
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+RUN apk add --no-cache bash curl && rm -rf /var/cache/apk/*
 RUN npm install -g pnpm@8
 
 WORKDIR /app

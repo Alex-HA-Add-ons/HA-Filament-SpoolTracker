@@ -1,0 +1,42 @@
+---
+description: Project architecture and file structure. Read when adding new features or understanding the codebase layout.
+---
+
+# Project Architecture
+
+## System Overview
+Full-stack TypeScript monorepo: Node.js backend + React frontend + shared types + real-time WebSocket.
+
+## Backend (`/server/`)
+- `index.ts` - Express server entry point
+- `routes/` - API route handlers
+- `websocket/` - WebSocket server manager
+- `database/` - Prisma connection management
+- `middleware/` - Express middleware (ingress, request logging)
+- `utils/` - Utilities (structured logger)
+- `prisma/` - Prisma schema and migrations
+
+## Frontend (`/client/`)
+- `src/App.tsx` - Root application component
+- `src/pages/` - Page components (one per feature/tab)
+- `src/components/` - Reusable UI components
+- `src/hooks/` - Custom React hooks (WebSocket, localStorage, API)
+- `src/services/` - API client (axios)
+- `src/styles/` - Shared CSS
+- `src/modals/` - Modal components
+- `src/layouts/` - Layout components
+- `src/utils/` - Utility functions
+
+## Shared Types (`/types/`)
+- `index.ts` - TypeScript interfaces shared between client and server
+
+## Infrastructure
+- `config.yaml` - HA add-on configuration
+- `Dockerfile` - Multi-stage Docker build
+- `build.yaml` - Multi-arch build targets
+- `run.sh` - HA startup script
+- `docker-compose.yml` - Local PostgreSQL for development
+- `pnpm-workspace.yaml` - Workspace definition
+
+## Import Aliases (Client)
+- `@components/*`, `@pages/*`, `@hooks/*`, `@services/*`, `@layouts/*`, `@modals/*`, `@utils/*`, `@styles/*`

@@ -1,0 +1,24 @@
+---
+description: Home Assistant add-on development guidelines. Read when modifying Docker, config.yaml, run.sh, or HA integration.
+---
+
+# Home Assistant Add-on Development
+
+## File Structure
+```
+root/
+├── config.yaml     # Add-on configuration and schema
+├── Dockerfile      # Multi-stage build definition
+├── build.yaml      # Multi-architecture build targets
+├── run.sh          # Startup script
+```
+
+## Key Concepts
+- **Ingress**: HA proxies the add-on UI through its own domain; `ingressMiddleware` strips ingress path prefixes
+- **config.yaml schema**: Defines options the user sets in the HA UI; accessed via `bashio::config` in `run.sh`
+- **Watchdog**: HA pings `/api/health` to check if the add-on is alive
+
+## Development
+- `pnpm addon:build` - Build Docker image locally
+- PostgreSQL connection string comes from HA config options
+- `run.sh` loads config with `bashio`, runs migrations, then starts the server

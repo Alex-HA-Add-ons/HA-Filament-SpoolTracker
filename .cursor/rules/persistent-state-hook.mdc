@@ -1,0 +1,17 @@
+---
+description: useStoredState hook for persisting UI state in localStorage. Read when adding persistent UI preferences.
+---
+
+## useStoredState
+
+Wraps `useState` and mirrors the value into `localStorage`. Located in `client/src/hooks/useStoredState.ts`.
+
+### API
+```ts
+const [state, setState] = useStoredState<T>(key, initialValue, options?)
+```
+
+- Key convention: `featureNamespace:key` (e.g., `sidebar:collapsed`)
+- Supports cross-tab sync via `storage` event
+- Use `setSerde<T>()` helper for `Set<T>` types
+- Keep stored values small and UI-oriented; no secrets

@@ -1,0 +1,43 @@
+---
+description: UI guidelines reflecting the design system. Read before making frontend changes.
+---
+
+# UI Guidelines
+
+## Dark Theme
+- **Primary Background**: `var(--bg-primary)` (#0d1117)
+- **Secondary Background**: `var(--bg-secondary)` (#161b22) for cards/panels
+- **Tertiary Background**: `var(--bg-tertiary)` (#21262d) for elevated elements
+- **Text**: Primary (#f0f6fc), Secondary (#8b949e), Muted (#6e7681)
+- **Borders**: `var(--border-color)` (#30363d)
+- **Accent**: `var(--accent-primary)` (#58a6ff)
+
+## Layout
+- Max width: 1400px with auto margins
+- Responsive grid: `repeat(auto-fit, minmax(300px, 1fr))`
+- Spacing via CSS variables: `--spacing-xs` through `--spacing-xxl`
+- Card-based design with `var(--bg-secondary)` background
+
+## Components
+- **Buttons**: `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-success`, `.btn-danger`
+- **Cards**: `.card` with `var(--bg-secondary)` and `var(--radius-lg)`
+- **Forms**: inputs use `var(--bg-secondary)` with accent focus border
+- **Loading**: `.spinner` with accent color
+
+## App Structure (Frontend)
+- Pages: `client/src/pages/<Page>/index.tsx` + `index.css`
+- Shared components: `client/src/components/`
+- Hooks: `client/src/hooks/`
+- Services: `client/src/services/`
+- Import aliases: `@pages/*`, `@components/*`, `@hooks/*`, `@services/*`, `@layouts/*`, `@utils/*`, `@styles/*`
+
+## React Patterns
+- Functional components with hooks only
+- WebSocket hooks in `@hooks/useWebSocket`
+- API access via `@services/api`
+- Page-scoped styles in `pages/<Page>/index.css`
+
+## Responsive Breakpoints
+- Desktop: 1200px+
+- Tablet: 768-1199px
+- Mobile: <768px (minimum 44px touch targets, 14px min font)

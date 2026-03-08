@@ -1,0 +1,42 @@
+---
+description: Development practices, coding standards, and workflow guidelines. Read before making code changes.
+---
+
+# Development Guidelines
+
+## Build Commands (pnpm Workspaces)
+- `pnpm dev` - Start all workspaces in dev mode (already started by developer)
+- `pnpm build` - Build all workspaces. REQUIRED to check changes made.
+- `pnpm type-check` - TypeScript validation across project. REQUIRED to run after changes are made.
+- `pnpm --filter @ha-addon/server dev` - Server only (already started by developer)
+- `pnpm --filter @ha-addon/client dev` - Client only (already started by developer)
+
+## TypeScript
+- Strict mode enabled in both client and server
+- Shared types in `/types/index.ts`, imported as `@ha-addon/types`
+- Use proper TypeScript interfaces for all data contracts
+
+## Logging (Server)
+```typescript
+import { LOG } from '../utils/logger';
+const logger = LOG('COMPONENT_NAME');
+logger.info('message');
+logger.error('message', error);
+```
+- Levels: ERROR, WARN, INFO, DEBUG (controlled by `LOG_LEVEL` env)
+- Never log secrets or sensitive data
+
+## Error Handling
+- Graceful degradation over hard crashes
+- Comprehensive error context in logs
+- Clear user-facing error messages
+
+## WebSocket
+- Server: `WebSocketManager` handles connections, ping/pong, and broadcast
+- Client: `useWebSocket` hook provides connection, subscribe, and request
+- Extend message types in both `types/index.ts` and the WS event types
+
+## API Routes
+- All routes mounted under `/api` prefix
+- Use Express Router pattern
+- Access shared services via `req.app.locals`

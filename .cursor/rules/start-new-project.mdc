@@ -1,0 +1,99 @@
+---
+description: Checklist for starting a new project from this boilerplate. Read when creating a new add-on based on this template.
+---
+
+# Starting a New Project
+
+When creating a new add-on from this boilerplate, update the items below.
+Use find-and-replace where noted; the rest are one-off edits.
+
+---
+
+## 1. Pick your identifiers
+
+Decide these up front — they propagate everywhere:
+
+| Identifier | Example | Used in |
+|---|---|---|
+| **Project name** | `My Smart Lights` | UI, README, logs |
+| **Slug** | `my_smart_lights` | config.yaml, HA registry |
+| **npm scope** | `@smart-lights` | all package.json, Dockerfile, tsconfig, imports |
+| **npm name** | `smart-lights-addon` | root package.json, Docker image tag |
+| **Panel icon** | `mdi:lightbulb` | config.yaml |
+
+---
+
+## 2. Global find-and-replace
+
+Run these across the entire project:
+
+| Find | Replace with | Affects |
+|---|---|---|
+| `ha-addon-boilerplate` | `your-npm-name` | root package.json, .vscode/tasks.json (Docker image tag) |
+| `ha_addon_boilerplate` | `your_slug` | config.yaml |
+| `HA Add-on Boilerplate` | `Your Project Name` | config.yaml, index.html, App.tsx, run.sh, devcontainer.json, cursor rules |
+| `Home Assistant Add-on Boilerplate` | `Your Project Name` | App.tsx footer, README.md |
+
+After replacing, run `pnpm install` to regenerate the lockfile.
+
+---
+
+## 3. One-off edits
+
+### config.yaml
+- `description` — one-line add-on description
+- `panel_icon` — MDI icon name (browse at https://pictogrammers.com/library/mdi/)
+- `panel_title` — short title shown in HA sidebar
+- `options` / `schema` — add your add-on's config fields
+
+### repository.yaml
+- `name` — repository display name
+- `url` — your GitHub repo URL
+- `maintainer` — your name and email
+
+### README.md
+- Rewrite to describe your add-on
+
+### client/index.html
+- `<title>` — browser tab title
+
+### client/public/favicon.svg
+- Replace with your own icon (SVG recommended)
+
+### client/src/App.tsx
+- Header title
+- Footer text
+
+### client/src/pages/Dashboard/index.tsx
+- Subtitle and info card content — describe your add-on instead of the boilerplate
+
+### client/vite.config.ts
+- Fallback version string (`'0.1.0'`) — optional, auto-set by `ADDON_VERSION` env
+
+### .devcontainer/devcontainer.json
+- `name` — dev container display name
+- `forwardPorts` — adjust if your server uses different ports
+
+### .cursor/rules/project-overview.mdc
+- Rewrite to describe your add-on's purpose and stack
+
+---
+
+## 4. Database (optional)
+
+If your add-on needs persistence:
+
+1. Set `DATABASE_URL` in `server/.env` (SQLite is the zero-config default)
+2. Edit `server/prisma/schema.prisma` — add your models
+3. Run `pnpm --filter @your-scope/server db:migrate` to create the first migration
+4. To switch to PostgreSQL: change `provider` to `"postgresql"`, update column types, set a PG connection string
+
+If your add-on does NOT need a database, no action needed — the server runs fine without one.
+
+---
+
+## 5. After setup
+
+- [ ] `pnpm install` — regenerate lockfile with new package names
+- [ ] `pnpm prisma:generate` — regenerate Prisma client (if using DB)
+- [ ] `pnpm build` — verify production build

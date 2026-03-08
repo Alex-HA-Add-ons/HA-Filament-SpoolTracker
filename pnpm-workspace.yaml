@@ -1,0 +1,12 @@
+packages:
+  - client
+  - server
+  - types
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - better-sqlite3
+  - esbuild
+  - prisma
+  - simple-git-hooks

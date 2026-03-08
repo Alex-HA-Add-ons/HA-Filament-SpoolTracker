@@ -1,0 +1,10 @@
+{
+  "name": "@ha-addon/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types for the add-on",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  }
+}

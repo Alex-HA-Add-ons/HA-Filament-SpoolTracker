@@ -1,0 +1,39 @@
+{
+  "name": "ha-addon-boilerplate",
+  "version": "0.1.0",
+  "description": "Home Assistant add-on boilerplate with Node.js, React, and SQLite/PostgreSQL",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "type-check": "pnpm -r type-check",
+    "start": "pnpm --filter @ha-addon/server start",
+    "setup": "pnpm install",
+    "clean": "pnpm -r exec rm -rf dist node_modules",
+    "server:dev": "pnpm --filter @ha-addon/server dev",
+    "client:dev": "pnpm --filter @ha-addon/client dev",
+    "server:build": "pnpm --filter @ha-addon/server build",
+    "client:build": "pnpm --filter @ha-addon/client build",
+    "addon:build": "docker build -t ha-addon-boilerplate:latest .",
+    "prisma:generate": "pnpm --filter @ha-addon/server db:generate",
+    "prisma:migrate": "pnpm --filter @ha-addon/server db:migrate:deploy",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "bump-version": "node scripts/bump-version.js",
+    "postinstall": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "node scripts/bump-version.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.0.3",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "simple-git-hooks": "^2.13.0",
+    "typescript-eslint": "^8.56.1"
+  },
+  "license": "MIT"
+}

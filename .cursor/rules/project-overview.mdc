@@ -1,0 +1,23 @@
+---
+description: High-level overview of the project purpose and goals. Read for context on what this project is.
+---
+
+# HA Add-on Boilerplate - Project Overview
+
+## Purpose
+A boilerplate/starter template for building Home Assistant add-ons with a modern full-stack TypeScript architecture.
+
+## Core Stack
+- **Backend**: Node.js + Express + TypeScript + Prisma ORM + WebSocket
+- **Frontend**: React + TypeScript + Vite
+- **Database**: PostgreSQL
+- **Infrastructure**: pnpm workspaces, Docker, Home Assistant ingress
+
+## Key Features
+- Full-stack TypeScript with shared types between client and server
+- Real-time WebSocket communication
+- HA ingress support for seamless panel integration
+- Prisma ORM with migration support
+- Dark-themed responsive UI with CSS variables
+- Structured logging system
+- Docker multi-stage build for HA deployment

@@ -1,0 +1,52 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Add-on",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "build",
+        "--build-arg",
+        "BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest",
+        "-t",
+        "local/ha-addon-boilerplate",
+        "."
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Add-on Locally",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-p",
+        "3000:3000",
+        "-v",
+        "/tmp/addon_data:/data",
+        "local/ha-addon-boilerplate"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Development",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["install"],
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}

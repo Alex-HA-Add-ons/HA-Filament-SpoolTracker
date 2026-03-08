@@ -1,0 +1,31 @@
+---
+description: Database architecture and Prisma usage. Read when modifying the database schema, adding models, or working with Prisma.
+---
+
+# Database Architecture
+
+## Overview
+Database is **optional** — the server boots and runs without any `DATABASE_URL` configured. When a URL is provided, Prisma connects automatically.
+
+## Default: SQLite
+- Zero-config, file-based
+- Set `DATABASE_URL="file:./data/app.db"` (or the HA path `/data/app.db`)
+- Schema uses `provider = "sqlite"` by default
+
+## Optional: PostgreSQL
+- Change `provider` in `server/prisma/schema.prisma` to `"postgresql"`
+- Set `DATABASE_URL` to a PostgreSQL connection string
+- Some column types differ (e.g., `@db.Uuid`, `@db.Timestamptz` are PG-only)
+- Use `docker compose up -d` for a local PG instance
+
+## Connection
+- `server/database/core/connection.ts` — dynamic import of PrismaClient, graceful fallback if DB is unavailable
+- `getPrismaClient()` returns `null` when DB is disabled
+- `getConnectionStatus()` includes a `disabled` flag
+
+## Commands
+- `pnpm --filter @ha-addon/server db:migrate` — Create migration
+- `pnpm --filter @ha-addon/server db:migrate:deploy` — Apply migrations
+- `pnpm --filter @ha-addon/server db:generate` — Generate Prisma client
+- `pnpm --filter @ha-addon/server db:push` — Push schema to DB
+- `pnpm --filter @ha-addon/server db:studio` — Visual DB browser

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getPrismaClient } from '../database';
 import { LOG } from '../utils/logger';
 import type { PrinterCreateRequest, PrinterUpdateRequest } from '@ha-addon/types';
+import { publishActiveSpoolSensor } from '../services/haSensors';
 
 const logger = LOG('PRINTERS');
 const router: Router = Router();
@@ -72,6 +73,8 @@ router.put('/printers/:id', async (req: Request, res: Response) => {
       data,
       include: { activeSpool: true },
     });
+    // Active spool may have changed — refresh HA sensor.
+    await publishActiveSpoolSensor();
     res.json(printer);
   } catch (error) {
     logger.error('Failed to update printer:', error);

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getPrismaClient } from '../database';
 import { LOG } from '../utils/logger';
 import type { SpoolCreateRequest, SpoolUpdateRequest, DeductionRequest } from '@ha-addon/types';
+import { publishActiveSpoolSensor } from '../services/haSensors';
 
 const logger = LOG('SPOOLS');
 const router: Router = Router();
@@ -114,6 +115,7 @@ router.put('/spools/:id', async (req: Request, res: Response) => {
       where: { id: req.params.id as string },
       data,
     });
+    await publishActiveSpoolSensor();
     res.json(spool);
   } catch (error) {
     logger.error('Failed to update spool:', error);
@@ -152,6 +154,7 @@ router.post('/spools/:id/deduct', async (req: Request, res: Response) => {
       where: { id: req.params.id as string },
       data: { remainingWeight: newWeight },
     });
+    await publishActiveSpoolSensor();
     res.json(updated);
   } catch (error) {
     logger.error('Failed to deduct filament:', error);
@@ -168,6 +171,7 @@ router.post('/spools/:id/archive', async (req: Request, res: Response) => {
       where: { id: req.params.id as string },
       data: { isArchived: true, isActive: false },
     });
+    await publishActiveSpoolSensor();
     res.json(spool);
   } catch (error) {
     logger.error('Failed to archive spool:', error);
@@ -184,6 +188,7 @@ router.post('/spools/:id/activate', async (req: Request, res: Response) => {
       where: { id: req.params.id as string },
       data: { isActive: true, isArchived: false },
     });
+    await publishActiveSpoolSensor();
     res.json(spool);
   } catch (error) {
     logger.error('Failed to activate spool:', error);

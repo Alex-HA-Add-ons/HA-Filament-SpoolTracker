@@ -3,6 +3,7 @@ import { getPrismaClient } from '../database';
 import { LOG } from '../utils/logger';
 import { fetchAndCacheCoverImage } from './coverImageCache';
 import { sendNotification } from './notifications';
+import { publishActiveSpoolSensor } from './haSensors';
 
 const logger = LOG('HA_INTEGRATION');
 
@@ -315,6 +316,9 @@ async function onPrintFinished(
 
     trackedPrintStates.delete(printerPrefix);
     logger.info(`Print ${status}: "${job.projectName}"`);
+
+    // Spool remaining weight may have changed; refresh the HA sensor.
+    await publishActiveSpoolSensor();
   } catch (error) {
     logger.error('Failed to log print finish:', error);
   }

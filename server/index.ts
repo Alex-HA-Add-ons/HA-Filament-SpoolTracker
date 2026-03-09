@@ -10,6 +10,7 @@ import routes from './routes';
 import { LOG } from './utils/logger';
 import { startHAIntegration } from './services/haIntegration';
 import { startPeriodicChecks } from './services/notifications';
+import { publishActiveSpoolSensor } from './services/haSensors';
 
 const logger = LOG('SERVER');
 
@@ -60,6 +61,11 @@ async function startServer() {
       logger.warn('HA integration failed to start:', err)
     );
     startPeriodicChecks();
+
+    // Publish initial active spool state so HA has data immediately.
+    publishActiveSpoolSensor().catch((err) =>
+      logger.warn('Failed to publish active spool sensor on startup:', err)
+    );
 
     logger.info('Startup completed successfully');
   });

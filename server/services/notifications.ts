@@ -1,5 +1,6 @@
 import { LOG } from '../utils/logger';
 import { getPrismaClient } from '../database';
+import { publishActiveSpoolSensor } from './haSensors';
 
 const logger = LOG('NOTIFY');
 
@@ -93,6 +94,7 @@ export function startPeriodicChecks(): void {
   checkInterval = setInterval(async () => {
     await checkExpiringSpools();
     await checkUnassignedJobs();
+    await publishActiveSpoolSensor();
   }, 6 * 60 * 60 * 1000); // every 6 hours
 
   logger.info('Periodic notification checks started (every 6 hours)');

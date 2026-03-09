@@ -25,6 +25,7 @@ model Printer {
   entityPrefix       String   @map("entity_prefix")
   model              String?
   isActive           Boolean  @default(true) @map("is_active")
+  activeSpoolId      String?  @unique @map("active_spool_id")
   entityPrintStatus  String?  @map("entity_print_status")
   entityTaskName     String?  @map("entity_task_name")
   entityPrintWeight  String?  @map("entity_print_weight")
@@ -32,8 +33,8 @@ model Printer {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
 
-  printJobs PrintJob[]
-
+  activeSpool   Spool?     @relation(fields: [activeSpoolId], references: [id])
+  printJobs     PrintJob[]
   @@map("printers")
 }
 
@@ -56,8 +57,8 @@ model Spool {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  printJobs PrintJob[]
-
+  loadedOnPrinter Printer?
+  printJobs       PrintJob[]
   @@map("spools")
 }
 

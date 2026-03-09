@@ -7,12 +7,14 @@ export interface Printer {
   entityPrefix: string;
   model: string | null;
   isActive: boolean;
+  activeSpoolId: string | null;
   entityPrintStatus: string | null;
   entityTaskName: string | null;
   entityPrintWeight: string | null;
   entityCoverImage: string | null;
   createdAt: string;
   updatedAt: string;
+  activeSpool?: Spool | null;
 }
 
 export interface Spool {
@@ -33,6 +35,8 @@ export interface Spool {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Set when this spool is the active (loaded) spool on a printer. */
+  loadedOnPrinter?: { id: string; name: string } | null;
 }
 
 export interface PrintJob {
@@ -89,6 +93,7 @@ export interface PrinterCreateRequest {
   haDeviceId: string;
   entityPrefix: string;
   model?: string;
+  activeSpoolId?: string | null;
   entityPrintStatus?: string | null;
   entityTaskName?: string | null;
   entityPrintWeight?: string | null;
@@ -97,6 +102,7 @@ export interface PrinterCreateRequest {
 
 export interface PrinterUpdateRequest extends Partial<PrinterCreateRequest> {
   isActive?: boolean;
+  activeSpoolId?: string | null;
 }
 
 export interface PrintJobCreateRequest {
@@ -131,6 +137,10 @@ export interface DashboardStats {
   recentPrintJobs: PrintJob[];
   lowFilamentSpools: Spool[];
   activeSpoolsList: Spool[];
+  /** Printers with activeSpool for dashboard "loaded spool" quick update */
+  printersList: Printer[];
+  /** Non-archived spools (id, name, filamentType) for loaded-spool dropdowns */
+  spoolsList: Pick<Spool, 'id' | 'name' | 'filamentType'>[];
 }
 
 export interface HAConnectionStatus {

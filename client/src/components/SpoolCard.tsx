@@ -15,9 +15,10 @@ interface SpoolCardProps {
 export default function SpoolCard({ spool, onEdit, onDeduct, onArchive, onDelete, onActivate, onNameClick }: SpoolCardProps) {
   const colorDisplay = spool.colorHex || spool.color;
   const isLow = spool.remainingWeight <= 100;
+  const isActive = spool.isActive || !!spool.loadedOnPrinter;
 
   return (
-    <div className={`spool-card ${spool.isActive ? 'active' : ''} ${isLow ? 'low' : ''}`}>
+    <div className={`spool-card ${isActive ? 'active' : ''} ${isLow ? 'low' : ''}`}>
       <div className="spool-card-header">
         <div className="spool-color" style={{ backgroundColor: colorDisplay }} />
         <div className="spool-info">
@@ -30,7 +31,11 @@ export default function SpoolCard({ spool, onEdit, onDeduct, onArchive, onDelete
           )}
           <span className="spool-type-badge">{spool.filamentType}</span>
         </div>
-        {spool.isActive && <span className="spool-active-badge">Active</span>}
+        {isActive && (
+          <span className="spool-active-badge" title={spool.loadedOnPrinter ? `Loaded on ${spool.loadedOnPrinter.name}` : undefined}>
+            {spool.loadedOnPrinter ? `On ${spool.loadedOnPrinter.name}` : 'Active'}
+          </span>
+        )}
       </div>
 
       <div className="spool-card-body">
@@ -48,7 +53,7 @@ export default function SpoolCard({ spool, onEdit, onDeduct, onArchive, onDelete
       <div className="spool-card-actions">
         <button className="btn btn-secondary btn-sm" onClick={() => onEdit(spool)}>Edit</button>
         <button className="btn btn-secondary btn-sm" onClick={() => onDeduct(spool)}>Deduct</button>
-        {!spool.isActive ? (
+        {!isActive ? (
           <button className="btn btn-secondary btn-sm" onClick={() => onActivate(spool)}>Activate</button>
         ) : (
           <button className="btn btn-secondary btn-sm" onClick={() => onArchive(spool)}>Archive</button>

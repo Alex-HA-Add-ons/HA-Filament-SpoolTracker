@@ -12,7 +12,7 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
   try {
     const lowFilamentThreshold = 100; // grams, TODO: read from settings
 
-    const [totalSpools, activeSpools, registeredPrinters, activePrintJobs, recentPrintJobs, lowFilamentSpools, allSpools, activeSpoolsList] =
+    const [totalSpools, activeSpools, registeredPrinters, activePrintJobs, recentPrintJobs, lowFilamentSpools, allSpools, activeSpoolsList, printersList, spoolsList] =
       await Promise.all([
         prisma.spool.count({ where: { isArchived: false } }),
         prisma.spool.count({ where: { isActive: true, isArchived: false } }),
@@ -38,9 +38,33 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
           where: { isActive: true, isArchived: false },
           orderBy: { name: 'asc' },
         }),
+        prisma.printer.findMany({
+          orderBy: { name: 'asc' },
+          include: { activeSpool: true },
+        }),
+        prisma.spool.findMany({
+          where: { isArchived: false },
+          select: { id: true, name: true, filamentType: true },
+          orderBy: { name: 'asc' },
+        }),
       ]);
 
     const totalFilamentStock = allSpools.reduce((sum, s) => sum + s.remainingWeight, 0);
+
+    const spoolIdsForPrinter = [...new Set([...lowFilamentSpools.map((s) => s.id), ...activeSpoolsList.map((s) => s.id)])];
+    const printersWithSpool = spoolIdsForPrinter.length > 0
+      ? await prisma.printer.findMany({
+          where: { activeSpoolId: { in: spoolIdsForPrinter } },
+          select: { id: true, name: true, activeSpoolId: true },
+        })
+      : [];
+    const loadedOnBySpoolId = Object.fromEntries(
+      printersWithSpool
+        .filter((p) => p.activeSpoolId != null)
+        .map((p) => [p.activeSpoolId!, { id: p.id, name: p.name }])
+    );
+    const withLoadedOn = (s: { id: string; [k: string]: unknown }[]) =>
+      s.map((spool) => ({ ...spool, loadedOnPrinter: loadedOnBySpoolId[spool.id] ?? null }));
 
     res.json({
       totalSpools,
@@ -50,8 +74,10 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
       activePrintJobs,
       lowFilamentAlerts: lowFilamentSpools.length,
       recentPrintJobs,
-      lowFilamentSpools,
-      activeSpoolsList,
+      lowFilamentSpools: withLoadedOn(lowFilamentSpools),
+      activeSpoolsList: withLoadedOn(activeSpoolsList),
+      printersList,
+      spoolsList,
     });
   } catch (error) {
     logger.error('Failed to fetch dashboard stats:', error);

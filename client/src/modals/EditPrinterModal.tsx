@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Printer, HADiscoveredEntity } from '@ha-addon/types';
+import type { Printer, Spool, HADiscoveredEntity } from '@ha-addon/types';
 import './Modal.css';
 
 const ENTITY_SUFFIXES = {
@@ -28,6 +28,7 @@ export type EditPrinterSaveData = {
   entityPrefix: string;
   haDeviceId: string;
   model?: string;
+  activeSpoolId?: string | null;
   entityPrintStatus?: string | null;
   entityTaskName?: string | null;
   entityPrintWeight?: string | null;
@@ -36,6 +37,7 @@ export type EditPrinterSaveData = {
 
 interface EditPrinterModalProps {
   printer: Printer;
+  spools?: Spool[];
   onSave: (data: EditPrinterSaveData) => void;
   onClose: () => void;
   onDiscover?: () => Promise<HADiscoveredEntity[]>;
@@ -48,11 +50,12 @@ function pickEntityBySuffix(entities: string[], suffix: string): string | null {
   return found ?? null;
 }
 
-export default function EditPrinterModal({ printer, onSave, onClose, onDiscover, onFetchEntityStates }: EditPrinterModalProps) {
+export default function EditPrinterModal({ printer, spools = [], onSave, onClose, onDiscover, onFetchEntityStates }: EditPrinterModalProps) {
   const [name, setName] = useState(printer.name);
   const [entityPrefix, setEntityPrefix] = useState(printer.entityPrefix);
   const [haDeviceId, setHaDeviceId] = useState(printer.haDeviceId);
   const [model, setModel] = useState(printer.model || '');
+  const [activeSpoolId, setActiveSpoolId] = useState(printer.activeSpoolId ?? '');
   const [entityPrintStatus, setEntityPrintStatus] = useState(printer.entityPrintStatus ?? '');
   const [entityTaskName, setEntityTaskName] = useState(printer.entityTaskName ?? '');
   const [entityPrintWeight, setEntityPrintWeight] = useState(printer.entityPrintWeight ?? '');
@@ -66,6 +69,7 @@ export default function EditPrinterModal({ printer, onSave, onClose, onDiscover,
     setEntityPrefix(printer.entityPrefix);
     setHaDeviceId(printer.haDeviceId);
     setModel(printer.model || '');
+    setActiveSpoolId(printer.activeSpoolId ?? '');
     setEntityPrintStatus(printer.entityPrintStatus ?? '');
     setEntityTaskName(printer.entityTaskName ?? '');
     setEntityPrintWeight(printer.entityPrintWeight ?? '');
@@ -126,6 +130,7 @@ export default function EditPrinterModal({ printer, onSave, onClose, onDiscover,
       entityPrefix: prefix,
       haDeviceId: haDeviceId.trim(),
       model: model.trim() || undefined,
+      activeSpoolId: activeSpoolId.trim() || null,
       entityPrintStatus: entityPrintStatus.trim() || null,
       entityTaskName: entityTaskName.trim() || null,
       entityPrintWeight: entityPrintWeight.trim() || null,
@@ -242,6 +247,24 @@ export default function EditPrinterModal({ printer, onSave, onClose, onDiscover,
             />
             <span className="form-hint">
               Unique device identifier in Home Assistant. Usually same as Entity Prefix.
+            </span>
+          </div>
+
+          <div className="form-group">
+            <label>Loaded spool</label>
+            <select
+              value={activeSpoolId}
+              onChange={(e) => setActiveSpoolId(e.target.value)}
+            >
+              <option value="">None</option>
+              {spools.filter((s) => !s.isArchived).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.filamentType})
+                </option>
+              ))}
+            </select>
+            <span className="form-hint">
+              Spool currently loaded on this printer. Used to auto-deduct filament when a print completes and the job has no spool assigned.
             </span>
           </div>
 

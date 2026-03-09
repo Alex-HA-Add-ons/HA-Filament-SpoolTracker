@@ -252,11 +252,14 @@ async function onPrintFinished(
     const status = failed ? 'failed' : 'completed';
 
     const printerRecord = tracked.printerId
-      ? await prisma.printer.findUnique({ where: { id: tracked.printerId } })
-      : await prisma.printer.findFirst({ where: { entityPrefix: { contains: printerPrefix } } });
+      ? await prisma.printer.findUnique({ where: { id: tracked.printerId }, include: { activeSpool: true } })
+      : await prisma.printer.findFirst({ where: { entityPrefix: { contains: printerPrefix } }, include: { activeSpool: true } });
     const printWeightEntity = printerRecord?.entityPrintWeight ?? `sensor.${printerPrefix}_print_weight`;
     const printWeight = await fetchEntityState(printWeightEntity);
     const filamentUsed = printWeight ? parseFloat(printWeight) : null;
+
+    const currentJob = await prisma.printJob.findUnique({ where: { id: tracked.printJobId }, select: { spoolId: true } });
+    const spoolToDeduct = currentJob?.spoolId ?? printerRecord?.activeSpoolId ?? null;
 
     const job = await prisma.printJob.update({
       where: { id: tracked.printJobId },
@@ -265,16 +268,18 @@ async function onPrintFinished(
         completedAt: new Date(),
         filamentUsed: filamentUsed ?? undefined,
         progress: failed ? undefined : 100,
+        ...(spoolToDeduct != null && currentJob?.spoolId == null ? { spoolId: spoolToDeduct } : {}),
       },
       include: { spool: true },
     });
 
-    if (!failed && job.spoolId && filamentUsed) {
-      const spool = await prisma.spool.findUnique({ where: { id: job.spoolId } });
+    const effectiveSpoolId = job.spoolId ?? spoolToDeduct;
+    if (!failed && effectiveSpoolId && filamentUsed) {
+      const spool = await prisma.spool.findUnique({ where: { id: effectiveSpoolId } });
       if (spool) {
         const newWeight = Math.max(0, spool.remainingWeight - filamentUsed);
         await prisma.spool.update({
-          where: { id: job.spoolId },
+          where: { id: effectiveSpoolId },
           data: { remainingWeight: newWeight },
         });
         logger.info(`Deducted ${filamentUsed}g from spool "${spool.name}" (${newWeight}g remaining)`);
@@ -290,10 +295,10 @@ async function onPrintFinished(
       }
     }
 
-    if (!job.spoolId) {
+    if (!effectiveSpoolId) {
       await sendNotification(
         'Unassigned Print Job',
-        `Print job "${job.projectName}" completed but has no spool assigned. Please assign a spool in SpoolTracker.`
+        `Print job "${job.projectName}" completed but has no spool assigned. Assign a spool to printer "${printerRecord?.name ?? 'this printer'}" or to the print job in SpoolTracker.`
       );
     }
 

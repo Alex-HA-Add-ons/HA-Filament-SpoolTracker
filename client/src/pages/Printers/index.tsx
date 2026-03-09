@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { printersApi, haApi } from '@services/api';
-import type { Printer, HAConnectionStatus, HADiscoveredEntity } from '@ha-addon/types';
+import { printersApi, haApi, spoolsApi } from '@services/api';
+import type { Printer, Spool, HAConnectionStatus, HADiscoveredEntity } from '@ha-addon/types';
 import EditPrinterModal, { type EditPrinterSaveData } from '@modals/EditPrinterModal';
 import AddPrinterModal from '@modals/AddPrinterModal';
 import ConfirmModal from '@modals/ConfirmModal';
@@ -14,16 +14,19 @@ export default function PrintersPage() {
   const [editingPrinter, setEditingPrinter] = useState<Printer | null>(null);
   const [deletingPrinter, setDeletingPrinter] = useState<Printer | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [spools, setSpools] = useState<Spool[]>([]);
 
   useEffect(() => {
     const loadAll = async () => {
       try {
-        const [printersRes, haStatusRes] = await Promise.all([
+        const [printersRes, haStatusRes, spoolsRes] = await Promise.all([
           printersApi.getAll(),
           haApi.getStatus(),
+          spoolsApi.getAll(),
         ]);
         setPrinters(printersRes.data);
         setHaStatus(haStatusRes.data);
+        setSpools(spoolsRes.data);
       } catch (err) {
         console.error('Failed to load printers:', err);
       }
@@ -189,6 +192,7 @@ export default function PrintersPage() {
       {editingPrinter && (
         <EditPrinterModal
           printer={editingPrinter}
+          spools={spools}
           onSave={handleSaveEdit}
           onClose={() => setEditingPrinter(null)}
           onDiscover={async () => {

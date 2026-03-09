@@ -13,6 +13,7 @@ router.get('/printers', async (_req: Request, res: Response) => {
   try {
     const printers = await prisma.printer.findMany({
       orderBy: { name: 'asc' },
+      include: { activeSpool: true },
     });
     res.json(printers);
   } catch (error) {
@@ -33,6 +34,7 @@ router.post('/printers', async (req: Request, res: Response) => {
         haDeviceId: body.haDeviceId,
         entityPrefix: body.entityPrefix,
         model: body.model,
+        activeSpoolId: body.activeSpoolId ?? undefined,
         entityPrintStatus: body.entityPrintStatus ?? undefined,
         entityTaskName: body.entityTaskName ?? undefined,
         entityPrintWeight: body.entityPrintWeight ?? undefined,
@@ -63,10 +65,12 @@ router.put('/printers/:id', async (req: Request, res: Response) => {
     if (body.entityTaskName !== undefined) data.entityTaskName = body.entityTaskName;
     if (body.entityPrintWeight !== undefined) data.entityPrintWeight = body.entityPrintWeight;
     if (body.entityCoverImage !== undefined) data.entityCoverImage = body.entityCoverImage;
+    if (body.activeSpoolId !== undefined) data.activeSpoolId = body.activeSpoolId;
 
     const printer = await prisma.printer.update({
       where: { id: req.params.id as string },
       data,
+      include: { activeSpool: true },
     });
     res.json(printer);
   } catch (error) {

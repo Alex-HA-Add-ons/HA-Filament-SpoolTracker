@@ -21,7 +21,20 @@ router.get('/spools', async (req: Request, res: Response) => {
       where,
       orderBy: { updatedAt: 'desc' },
     });
-    res.json(spools);
+    const printersWithSpool = await prisma.printer.findMany({
+      where: { activeSpoolId: { in: spools.map((s) => s.id) } },
+      select: { id: true, name: true, activeSpoolId: true },
+    });
+    const loadedOnBySpoolId = Object.fromEntries(
+      printersWithSpool
+        .filter((p) => p.activeSpoolId != null)
+        .map((p) => [p.activeSpoolId!, { id: p.id, name: p.name }])
+    );
+    const result = spools.map((s) => ({
+      ...s,
+      loadedOnPrinter: loadedOnBySpoolId[s.id] ?? null,
+    }));
+    res.json(result);
   } catch (error) {
     logger.error('Failed to fetch spools:', error);
     res.status(500).json({ error: 'Failed to fetch spools' });

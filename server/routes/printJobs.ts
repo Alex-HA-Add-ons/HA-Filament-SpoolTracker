@@ -1,10 +1,27 @@
 import { Router, Request, Response } from 'express';
 import { getPrismaClient } from '../database';
 import { LOG } from '../utils/logger';
+import { getCoverImagePath, deleteCachedCoverImage } from '../services/coverImageCache';
 import type { PrintJobCreateRequest, PrintJobUpdateRequest } from '@ha-addon/types';
 
 const logger = LOG('PRINT_JOBS');
 const router: Router = Router();
+
+router.get('/print-jobs/:id/cover', (req: Request, res: Response) => {
+  const id = typeof req.params.id === 'string' ? req.params.id : (Array.isArray(req.params.id) ? req.params.id[0] : '');
+  const entry = getCoverImagePath(id);
+  if (!entry) {
+    return res.status(404).json({ error: 'Cover image not found' });
+  }
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.type(entry.contentType);
+  res.sendFile(entry.filePath, (err) => {
+    if (err && !res.headersSent) {
+      logger.warn('Failed to send cover image:', err);
+      res.status(500).json({ error: 'Failed to serve cover image' });
+    }
+  });
+});
 
 router.post('/print-jobs', async (req: Request, res: Response) => {
   const prisma = getPrismaClient();
@@ -141,8 +158,10 @@ router.delete('/print-jobs/:id', async (req: Request, res: Response) => {
   const prisma = getPrismaClient();
   if (!prisma) return res.status(503).json({ error: 'Database not available' });
 
+  const jobId = req.params.id as string;
   try {
-    await prisma.printJob.delete({ where: { id: req.params.id as string } });
+    await prisma.printJob.delete({ where: { id: jobId } });
+    deleteCachedCoverImage(jobId);
     res.status(204).send();
   } catch (error) {
     logger.error('Failed to delete print job:', error);

@@ -1,7 +1,15 @@
 import { Link } from 'react-router-dom';
 import type { PrintJob } from '@ha-addon/types';
+import { getApiBaseURL } from '../services/api';
 import StatusBadge from './StatusBadge';
 import './PrintJobCard.css';
+
+function projectImageSrc(projectImage: string | null): string | undefined {
+  if (!projectImage) return undefined;
+  if (projectImage.startsWith('http://') || projectImage.startsWith('https://')) return projectImage;
+  const base = getApiBaseURL();
+  return base.endsWith('/') ? base + projectImage.replace(/^\//, '') : base + (projectImage.startsWith('/') ? projectImage : '/' + projectImage);
+}
 
 interface PrintJobCardProps {
   job: PrintJob;
@@ -20,7 +28,7 @@ export default function PrintJobCard({ job, onAssignSpool, onDelete }: PrintJobC
     <div className="print-job-card">
       <div className="print-job-left">
         {job.projectImage ? (
-          <img src={job.projectImage} alt={job.projectName} className="print-job-thumb" />
+          <img src={projectImageSrc(job.projectImage)} alt={job.projectName} className="print-job-thumb" />
         ) : (
           <div className="print-job-thumb-placeholder" />
         )}

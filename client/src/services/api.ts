@@ -7,7 +7,7 @@ import type {
   HAConnectionStatus, HADiscoveredEntity, AppSettings,
 } from '@ha-addon/types';
 
-const getApiBaseURL = () => {
+export const getApiBaseURL = () => {
   const isIngress = window.location.pathname.includes('/api/hassio_ingress/');
 
   if (isIngress) {

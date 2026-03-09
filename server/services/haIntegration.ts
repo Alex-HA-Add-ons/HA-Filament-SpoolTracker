@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { getPrismaClient } from '../database';
 import { LOG } from '../utils/logger';
+import { fetchAndCacheCoverImage } from './coverImageCache';
 import { sendNotification } from './notifications';
 
 const logger = LOG('HA_INTEGRATION');
@@ -213,17 +214,27 @@ async function onPrintStarted(
     const coverImageEntity = printer.entityCoverImage ?? `image.${printerPrefix}_cover_image`;
     const projectName = await fetchEntityState(taskNameEntity) || 'Unknown Print';
     const printWeight = await fetchEntityState(printWeightEntity);
-    const coverImage = await fetchEntityValue(coverImageEntity, 'entity_picture');
+    const coverImageHaPath = await fetchEntityValue(coverImageEntity, 'entity_picture');
 
     const job = await prisma.printJob.create({
       data: {
         printerId: printer.id,
         projectName,
-        projectImage: coverImage || null,
+        projectImage: null,
         filamentUsed: printWeight ? parseFloat(printWeight) : null,
         status: 'in_progress',
       },
     });
+
+    if (coverImageHaPath && coverImageHaPath.startsWith('/')) {
+      const cachedPath = await fetchAndCacheCoverImage(coverImageHaPath, job.id);
+      if (cachedPath) {
+        await prisma.printJob.update({
+          where: { id: job.id },
+          data: { projectImage: cachedPath },
+        });
+      }
+    }
 
     trackedPrintStates.set(printerPrefix, {
       printerId: printer.id,

@@ -1,7 +1,7 @@
 ---
 name: "HA Filament SpoolTracker"
 description: "Track 3D printer filament spool usage with Bambu Lab integration for Home Assistant"
-version: 0.1.14
+version: 0.1.15
 slug: ha_filament_spooltracker
 init: false
 arch:

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { spoolsApi } from '@services/api';
 import type { Spool, SpoolCreateRequest } from '@ha-addon/types';
 import SpoolCard from '@components/SpoolCard';
@@ -8,7 +8,9 @@ import DeductFilamentModal from '@modals/DeductFilamentModal';
 import ConfirmModal from '@modals/ConfirmModal';
 import './index.css';
 
-type SpoolFilter = 'all' | 'active' | 'archived';
+type SpoolFilter = 'all' | 'active' | 'archived' | 'low';
+
+const LOW_FILAMENT_THRESHOLD = 100; // grams — keep in sync with server/dashboard
 
 export default function SpoolsPage() {
   const [spools, setSpools] = useState<Spool[]>([]);
@@ -16,6 +18,7 @@ export default function SpoolsPage() {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSpool, setEditingSpool] = useState<Spool | null>(null);
   const [deductingSpool, setDeductingSpool] = useState<Spool | null>(null);
@@ -23,9 +26,14 @@ export default function SpoolsPage() {
 
   const fetchSpools = useCallback(async () => {
     try {
-      const status = filter === 'all' ? undefined : filter;
+      const status = filter === 'all' || filter === 'low' ? undefined : filter;
       const response = await spoolsApi.getAll(status);
-      setSpools(response.data);
+      const allSpools = response.data;
+      if (filter === 'low') {
+        setSpools(allSpools.filter((s) => !s.isArchived && s.remainingWeight <= LOW_FILAMENT_THRESHOLD));
+      } else {
+        setSpools(allSpools);
+      }
     } catch (err) {
       console.error('Failed to fetch spools:', err);
     } finally {
@@ -36,6 +44,17 @@ export default function SpoolsPage() {
   useEffect(() => {
     fetchSpools();
   }, [fetchSpools]);
+
+  // Initialize filter from query string (e.g. /spools?filter=active)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('filter');
+    if (!raw) return;
+    const value = raw.toLowerCase() as SpoolFilter;
+    if (value === 'all' || value === 'active' || value === 'archived' || value === 'low') {
+      setFilter(value);
+    }
+  }, [location.search]);
 
   const handleSave = async (data: SpoolCreateRequest) => {
     try {
@@ -105,13 +124,13 @@ export default function SpoolsPage() {
       </div>
 
       <div className="spools-filters">
-        {(['all', 'active', 'archived'] as SpoolFilter[]).map((f) => (
+        {(['all', 'active', 'archived', 'low'] as SpoolFilter[]).map((f) => (
           <button
             key={f}
             className={`btn ${filter === f ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setFilter(f)}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === 'low' ? 'Low' : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>

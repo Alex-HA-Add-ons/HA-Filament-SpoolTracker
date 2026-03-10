@@ -15,9 +15,10 @@ interface PrintJobCardProps {
   job: PrintJob;
   onAssignSpool?: (job: PrintJob) => void;
   onDelete?: (job: PrintJob) => void;
+  onComplete?: (job: PrintJob) => void;
 }
 
-export default function PrintJobCard({ job, onAssignSpool, onDelete }: PrintJobCardProps) {
+export default function PrintJobCard({ job, onAssignSpool, onDelete, onComplete }: PrintJobCardProps) {
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString(undefined, {
       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -38,6 +39,16 @@ export default function PrintJobCard({ job, onAssignSpool, onDelete }: PrintJobC
           <h4 className="print-job-name">{job.projectName}</h4>
           <div className="print-job-header-actions">
             <StatusBadge status={job.status} />
+            {onComplete && job.status === 'in_progress' && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-xs"
+                onClick={() => onComplete(job)}
+                title="Mark print as completed"
+              >
+                Mark completed
+              </button>
+            )}
             {onDelete && (
               <button
                 type="button"

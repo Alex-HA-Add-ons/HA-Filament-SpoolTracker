@@ -8,7 +8,7 @@
 .app-header {
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -23,10 +23,44 @@
   align-items: center;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
 .header-right {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  margin: 0 var(--spacing-md);
+}
+
+.app-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.app-logo-mark {
+  width: 28px;
+  height: 28px;
+}
+
+.app-logo-text {
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .version-badge {
@@ -43,6 +77,27 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.header-menu-toggle {
+  display: none;
+  width: 40px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  padding: 6px 8px;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.header-menu-toggle span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--text-primary);
+  border-radius: 999px;
 }
 
 .connection-status {
@@ -89,18 +144,36 @@
 
 @media (max-width: 768px) {
   .header-content {
-    flex-direction: column;
     gap: var(--spacing-sm);
-    text-align: center;
   }
 
   .header-right {
-    align-self: flex-end;
     gap: var(--spacing-sm);
   }
 
-  .app-title {
-    font-size: 20px;
+  .app-logo-text {
+    font-size: 16px;
+  }
+
+  .header-center {
+    position: fixed;
+    inset: auto 0 0 0;
+    top: var(--header-drawer-top, 56px);
+    display: none;
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+    margin: 0;
+    background: var(--bg-secondary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-top: 1px solid var(--border-color);
+    z-index: 90;
+  }
+
+  .app-header.nav-open .header-center {
+    display: block;
+  }
+
+  .header-menu-toggle {
+    display: inline-flex;
   }
 
   .app-main {

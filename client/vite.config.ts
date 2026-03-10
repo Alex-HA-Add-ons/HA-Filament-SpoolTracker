@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
+import fs from 'node:fs'
+
+const rootPkg = JSON.parse(
+  fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
+) as { version?: string }
 
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development'
@@ -35,7 +40,9 @@ export default defineConfig(({ mode }) => {
     // Home Assistant compatibility - use relative paths
     base: './',
     define: {
-      __ADDON_VERSION__: JSON.stringify(process.env.ADDON_VERSION || '0.1.0'),
+      __ADDON_VERSION__: JSON.stringify(
+        process.env.ADDON_VERSION || rootPkg.version || '0.1.0'
+      ),
     },
   }
 })

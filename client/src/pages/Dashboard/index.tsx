@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardApi, printersApi } from '@services/api';
 import type { DashboardStats, Printer } from '@ha-addon/types';
@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await dashboardApi.getStats();
       setStats(response.data);
@@ -19,13 +19,21 @@ export default function DashboardPage() {
     } catch {
       setError('Failed to load dashboard data');
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 15000);
-    return () => clearInterval(interval);
-  }, []);
+    let cancelled = false;
+    const run = async () => {
+      await fetchStats();
+      if (cancelled) return;
+      const interval = setInterval(fetchStats, 15000);
+      if (cancelled) clearInterval(interval);
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchStats]);
 
   const handlePrinterLoadedSpoolChange = async (printer: Printer, activeSpoolId: string | null) => {
     if (!stats) return;
@@ -66,26 +74,46 @@ export default function DashboardPage() {
       <p className="page-subtitle">Overview of your filament inventory and print activity</p>
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <button
+          type="button"
+          className="stat-card stat-card-clickable"
+          onClick={() => navigate('/printers')}
+        >
           <span className="stat-value">{stats.registeredPrinters}</span>
           <span className="stat-label">Printers</span>
-        </div>
-        <div className="stat-card">
+        </button>
+        <button
+          type="button"
+          className="stat-card stat-card-clickable"
+          onClick={() => navigate('/spools')}
+        >
           <span className="stat-value">{stats.totalSpools}</span>
           <span className="stat-label">Spools</span>
-        </div>
-        <div className="stat-card">
+        </button>
+        <button
+          type="button"
+          className="stat-card stat-card-clickable"
+          onClick={() => navigate('/spools?filter=all')}
+        >
           <span className="stat-value">{(stats.totalFilamentStock / 1000).toFixed(1)}kg</span>
           <span className="stat-label">Filament Stock</span>
-        </div>
-        <div className="stat-card">
+        </button>
+        <button
+          type="button"
+          className="stat-card stat-card-clickable"
+          onClick={() => navigate('/history?status=in_progress')}
+        >
           <span className="stat-value">{stats.activePrintJobs}</span>
           <span className="stat-label">Printing Now</span>
-        </div>
-        <div className={`stat-card ${stats.lowFilamentAlerts > 0 ? 'stat-warning' : ''}`}>
+        </button>
+        <button
+          type="button"
+          className={`stat-card stat-card-clickable ${stats.lowFilamentAlerts > 0 ? 'stat-warning' : ''}`}
+          onClick={() => navigate('/spools?filter=low')}
+        >
           <span className="stat-value">{stats.lowFilamentAlerts}</span>
           <span className="stat-label">Low Filament</span>
-        </div>
+        </button>
       </div>
 
       {stats.printersList?.length > 0 && (

@@ -1,16 +1,15 @@
 .tab-nav {
   display: flex;
   gap: var(--spacing-xs);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: transparent;
   border-radius: var(--radius-lg);
-  padding: var(--spacing-xs);
-  margin-bottom: var(--spacing-lg);
+  padding: 0;
+  width: 100%;
 }
 
 .tab-nav-item {
   flex: 1;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
   border: none;
   border-radius: var(--radius-md);
@@ -19,7 +18,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition-fast);
-  min-height: 40px;
+  min-height: 32px;
 }
 
 .tab-nav-item:hover {

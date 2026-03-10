@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import TabNav from '@components/TabNav';
 import DashboardPage from '@pages/Dashboard';
@@ -30,24 +31,54 @@ function App() {
   const activeTab = getActiveTab(pathname);
   const version = __ADDON_VERSION__;
 
+  const [navOpen, setNavOpen] = useState(false);
+
+  useEffect(() => {
+    // Close mobile nav when route changes
+    setNavOpen(false);
+  }, [pathname]);
+
   const handleTabChange = (tabId: string) => {
     const tab = TABS.find((t) => t.id === tabId);
-    if (tab) navigate(tab.path);
+    if (tab) {
+      navigate(tab.path);
+      setNavOpen(false);
+    }
   };
 
   return (
     <div className="app">
-      <header className="app-header">
+      <header className={`app-header ${navOpen ? 'nav-open' : ''}`}>
         <div className="header-content">
-          <h1 className="app-title">HA Filament SpoolTracker</h1>
+          <button
+            type="button"
+            className="app-logo"
+            onClick={() => handleTabChange('dashboard')}
+            aria-label="Go to Dashboard"
+          >
+            <img src="/favicon.svg" alt="SpoolTracker logo" className="app-logo-mark" />
+            <span className="app-logo-text">SpoolTracker</span>
+          </button>
+          <div className="header-center">
+            <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
+          </div>
           <div className="header-right">
             {version && <div className="version-badge">v{version}</div>}
+            <button
+              type="button"
+              className={`header-menu-toggle ${navOpen ? 'open' : ''}`}
+              onClick={() => setNavOpen((open) => !open)}
+              aria-label="Toggle navigation"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
           </div>
         </div>
       </header>
 
       <main className="app-main">
-        <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />

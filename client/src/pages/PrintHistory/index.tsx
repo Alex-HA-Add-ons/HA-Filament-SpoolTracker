@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { printJobsApi, spoolsApi, printersApi } from '@services/api';
 import type { PrintJob, Spool, Printer, PrintJobStatus } from '@ha-addon/types';
 import PrintJobCard from '@components/PrintJobCard';
@@ -9,6 +10,7 @@ import './index.css';
 const PAGE_SIZE = 20;
 
 export default function PrintHistoryPage() {
+  const location = useLocation();
   const [jobs, setJobs] = useState<PrintJob[]>([]);
   const [spools, setSpools] = useState<Spool[]>([]);
   const [printers, setPrinters] = useState<Printer[]>([]);
@@ -20,6 +22,30 @@ export default function PrintHistoryPage() {
   const [selectedSpoolId, setSelectedSpoolId] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [deletingJob, setDeletingJob] = useState<PrintJob | null>(null);
+
+  // Initialize status filter from query string (e.g. /history?status=in_progress)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('status');
+    if (!raw) return;
+    const allowed = ['', 'in_progress', 'completed', 'failed', 'cancelled'] as const;
+    if (allowed.includes(raw as typeof allowed[number])) {
+      setStatusFilter(raw);
+    }
+  }, [location.search]);
+
+  const reloadFirstPage = useCallback(async () => {
+    setJobs([]);
+    setHasMore(true);
+    setLoading(true);
+    try {
+      const res = await printJobsApi.getAll({ limit: PAGE_SIZE, offset: 0, ...(statusFilter && { status: statusFilter }) });
+      setJobs(res.data);
+      setHasMore(res.data.length === PAGE_SIZE);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
 
   const fetchPage = useCallback(async (offset: number, append: boolean) => {
     const params: Record<string, string | number> = { limit: PAGE_SIZE, offset };
@@ -77,15 +103,7 @@ export default function PrintHistoryPage() {
       await printJobsApi.update(assigningJob.id, { spoolId: selectedSpoolId });
       setAssigningJob(null);
       setSelectedSpoolId('');
-      setJobs([]);
-      setHasMore(true);
-      setLoading(true);
-      printJobsApi.getAll({ limit: PAGE_SIZE, offset: 0, ...(statusFilter && { status: statusFilter }) })
-        .then((res) => {
-          setJobs(res.data);
-          setHasMore(res.data.length === PAGE_SIZE);
-        })
-        .finally(() => setLoading(false));
+      await reloadFirstPage();
     } catch (err) {
       console.error('Failed to assign spool:', err);
     }
@@ -102,15 +120,7 @@ export default function PrintHistoryPage() {
     try {
       await printJobsApi.create(data);
       setShowAddModal(false);
-      setJobs([]);
-      setHasMore(true);
-      setLoading(true);
-      printJobsApi.getAll({ limit: PAGE_SIZE, offset: 0, ...(statusFilter && { status: statusFilter }) })
-        .then((res) => {
-          setJobs(res.data);
-          setHasMore(res.data.length === PAGE_SIZE);
-        })
-        .finally(() => setLoading(false));
+      await reloadFirstPage();
     } catch (err) {
       console.error('Failed to add print job:', err);
     }
@@ -124,6 +134,15 @@ export default function PrintHistoryPage() {
       setDeletingJob(null);
     } catch (err) {
       console.error('Failed to delete print job:', err);
+    }
+  };
+
+  const handleCompleteJob = async (job: PrintJob) => {
+    try {
+      await printJobsApi.update(job.id, { status: 'completed' });
+      await reloadFirstPage();
+    } catch (err) {
+      console.error('Failed to complete print job:', err);
     }
   };
 
@@ -175,6 +194,7 @@ export default function PrintHistoryPage() {
                 key={job.id}
                 job={job}
                 onAssignSpool={(j) => { setAssigningJob(j); setSelectedSpoolId(''); }}
+                onComplete={handleCompleteJob}
                 onDelete={(j) => setDeletingJob(j)}
               />
             ))}

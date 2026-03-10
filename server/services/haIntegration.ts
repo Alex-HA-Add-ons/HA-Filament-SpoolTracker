@@ -11,6 +11,7 @@ let haSocket: WebSocket | null = null;
 let messageId = 1;
 let isConnected = false;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconcileTimer: ReturnType<typeof setInterval> | null = null;
 let subscriptionId: number | null = null;
 
 const trackedPrintStates = new Map<string, {
@@ -35,6 +36,11 @@ export async function startHAIntegration(): Promise<void> {
   }
 
   connect(token);
+
+  if (reconcileTimer) clearInterval(reconcileTimer);
+  reconcileTimer = setInterval(() => {
+    void reconcileInProgressJobs();
+  }, 60_000);
 }
 
 function connect(token: string): void {
@@ -256,25 +262,41 @@ async function onPrintFinished(
 ): Promise<void> {
   try {
     const tracked = trackedPrintStates.get(printerPrefix);
-    if (!tracked?.printJobId) {
-      logger.warn(`No tracked print job for printer prefix: ${printerPrefix}`);
-      return;
-    }
+    let jobId = tracked?.printJobId ?? null;
+    const printerId = tracked?.printerId ?? null;
 
     const status = failed ? 'failed' : 'completed';
 
-    const printerRecord = tracked.printerId
-      ? await prisma.printer.findUnique({ where: { id: tracked.printerId }, include: { activeSpool: true } })
+    const printerRecord = printerId
+      ? await prisma.printer.findUnique({ where: { id: printerId }, include: { activeSpool: true } })
       : await prisma.printer.findFirst({ where: { entityPrefix: { contains: printerPrefix } }, include: { activeSpool: true } });
+
+    if (!jobId && printerRecord) {
+      // Fallback: find most recent in-progress job for this printer (e.g. after restart or lost WS state).
+      const latestJob = await prisma.printJob.findFirst({
+        where: { printerId: printerRecord.id, status: 'in_progress' },
+        orderBy: { startedAt: 'desc' },
+      });
+      if (!latestJob) {
+        logger.warn(`No tracked or in-progress print job found for printer prefix: ${printerPrefix}`);
+        return;
+      }
+      jobId = latestJob.id;
+    }
+
+    if (!jobId) {
+      logger.warn(`No tracked print job and no printer record for prefix: ${printerPrefix}`);
+      return;
+    }
     const printWeightEntity = printerRecord?.entityPrintWeight ?? `sensor.${printerPrefix}_print_weight`;
     const printWeight = await fetchEntityState(printWeightEntity);
     const filamentUsed = printWeight ? parseFloat(printWeight) : null;
 
-    const currentJob = await prisma.printJob.findUnique({ where: { id: tracked.printJobId }, select: { spoolId: true } });
+    const currentJob = await prisma.printJob.findUnique({ where: { id: jobId }, select: { spoolId: true } });
     const spoolToDeduct = currentJob?.spoolId ?? printerRecord?.activeSpoolId ?? null;
 
     const job = await prisma.printJob.update({
-      where: { id: tracked.printJobId },
+      where: { id: jobId },
       data: {
         status,
         completedAt: new Date(),
@@ -324,6 +346,39 @@ async function onPrintFinished(
   }
 }
 
+async function reconcileInProgressJobs(): Promise<void> {
+  const prisma = getPrismaClient();
+  if (!prisma) return;
+
+  try {
+    const inProgress = await prisma.printJob.findMany({
+      where: { status: 'in_progress', printerId: { not: null } },
+      include: { printer: true },
+    });
+
+    if (inProgress.length === 0) return;
+
+    for (const job of inProgress) {
+      const printer = job.printer;
+      if (!printer) continue;
+      const prefix = printer.entityPrefix || printer.haDeviceId;
+      if (!prefix) continue;
+      const statusEntity = printer.entityPrintStatus ?? `sensor.${prefix}_print_status`;
+      const status = (await fetchEntityState(statusEntity))?.toLowerCase();
+      if (!status) continue;
+
+      const isFinished = status === 'finish' || status === 'finished' || status === 'completed' || status === 'idle';
+      const isFailed = status === 'failed';
+      if (isFinished || isFailed) {
+        logger.info(`Reconciliation: job ${job.id} for printer ${prefix} has HA status "${status}", finalizing.`);
+        await onPrintFinished(prisma, prefix, isFailed);
+      }
+    }
+  } catch (err) {
+    logger.error('Failed to reconcile in-progress jobs from HA status:', err);
+  }
+}
+
 async function fetchEntityState(entityId: string): Promise<string | null> {
   const token = process.env.SUPERVISOR_TOKEN;
   if (!token) return null;
@@ -367,6 +422,10 @@ export function stopHAIntegration(): void {
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
+  }
+  if (reconcileTimer) {
+    clearInterval(reconcileTimer);
+    reconcileTimer = null;
   }
   if (haSocket) {
     try { haSocket.close(); } catch { /* ignore */ }

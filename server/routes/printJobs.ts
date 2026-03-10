@@ -122,6 +122,14 @@ router.put('/print-jobs/:id', async (req: Request, res: Response) => {
 
   try {
     const body: PrintJobUpdateRequest = req.body;
+     // Load existing job so we can detect transitions (e.g. in_progress -> completed, or spool assigned later).
+    const existing = await prisma.printJob.findUnique({
+      where: { id: req.params.id as string },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: 'Print job not found' });
+    }
+
     const data: Record<string, unknown> = {};
 
     if (body.spoolId !== undefined) data.spoolId = body.spoolId;
@@ -137,12 +145,25 @@ router.put('/print-jobs/:id', async (req: Request, res: Response) => {
       include: { printer: true, spool: true },
     });
 
-    if (body.status === 'completed' && job.spoolId && job.filamentUsed) {
-      const spool = await prisma.spool.findUnique({ where: { id: job.spoolId } });
+    const transitionedToCompleted =
+      body.status === 'completed' && existing.status !== 'completed';
+    const newlyAssignedSpool =
+      body.spoolId !== undefined && body.spoolId != null && existing.spoolId == null;
+
+    const shouldDeduct =
+      job.spoolId &&
+      job.filamentUsed &&
+      (
+        (transitionedToCompleted && job.spoolId != null) ||
+        (newlyAssignedSpool && job.status === 'completed')
+      );
+
+    if (shouldDeduct) {
+      const spool = await prisma.spool.findUnique({ where: { id: job.spoolId! } });
       if (spool) {
         await prisma.spool.update({
-          where: { id: job.spoolId },
-          data: { remainingWeight: Math.max(0, spool.remainingWeight - job.filamentUsed) },
+          where: { id: job.spoolId! },
+          data: { remainingWeight: Math.max(0, spool.remainingWeight - job.filamentUsed!) },
         });
       }
     }

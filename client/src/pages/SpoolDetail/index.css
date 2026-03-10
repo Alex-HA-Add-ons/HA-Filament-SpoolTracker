@@ -28,8 +28,10 @@
   gap: var(--spacing-md);
 }
 
-.spool-detail-header .btn {
+.spool-detail-actions {
   margin-left: auto;
+  display: flex;
+  gap: var(--spacing-xs);
   flex-shrink: 0;
 }
 

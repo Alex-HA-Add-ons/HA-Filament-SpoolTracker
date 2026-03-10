@@ -56,7 +56,7 @@ function App() {
             onClick={() => handleTabChange('dashboard')}
             aria-label="Go to Dashboard"
           >
-            <img src="/favicon.svg" alt="SpoolTracker logo" className="app-logo-mark" />
+            <img src="favicon.svg" alt="SpoolTracker logo" className="app-logo-mark" />
             <span className="app-logo-text">SpoolTracker</span>
           </button>
           <div className="header-center">

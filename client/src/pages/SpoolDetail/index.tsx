@@ -5,6 +5,8 @@ import type { Spool, PrintJob, SpoolCreateRequest } from '@ha-addon/types';
 import PrintJobCard from '@components/PrintJobCard';
 import ProgressBar from '@components/ProgressBar';
 import AddEditSpoolModal from '@modals/AddEditSpoolModal';
+import DeductFilamentModal from '@modals/DeductFilamentModal';
+import ConfirmModal from '@modals/ConfirmModal';
 import './index.css';
 
 export default function SpoolDetailPage() {
@@ -15,6 +17,8 @@ export default function SpoolDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeductModal, setShowDeductModal] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -68,6 +72,28 @@ export default function SpoolDetailPage() {
     }
   };
 
+  const handleDeduct = async (amount: number, _reason: string) => {
+    if (!spool) return;
+    try {
+      const updated = await spoolsApi.deduct(spool.id, { amount });
+      setSpool(updated.data);
+      setShowDeductModal(false);
+    } catch (err) {
+      console.error('Failed to deduct filament:', err);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!spool) return;
+    try {
+      await spoolsApi.archive(spool.id);
+      setConfirmArchive(false);
+      navigate('/spools');
+    } catch (err) {
+      console.error('Failed to archive spool:', err);
+    }
+  };
+
   const colorDisplay = spool.colorHex || spool.color;
 
   return (
@@ -84,9 +110,19 @@ export default function SpoolDetailPage() {
           <h1 className="spool-detail-name">{spool.name}</h1>
           <span className="spool-detail-meta">{spool.filamentType} · {Math.round(spool.remainingWeight)}g / {Math.round(spool.initialWeight)}g</span>
         </div>
-        <button className="btn btn-secondary btn-sm" onClick={() => setShowEditModal(true)}>
-          Edit
-        </button>
+        <div className="spool-detail-actions">
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowDeductModal(true)}>
+            Deduct
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowEditModal(true)}>
+            Edit
+          </button>
+          {!spool.isArchived && (
+            <button className="btn btn-danger btn-sm" onClick={() => setConfirmArchive(true)}>
+              Archive
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="spool-detail-progress">
@@ -111,6 +147,25 @@ export default function SpoolDetailPage() {
           spool={spool}
           onSave={handleSaveEdit}
           onCancel={() => setShowEditModal(false)}
+        />
+      )}
+
+      {showDeductModal && spool && (
+        <DeductFilamentModal
+          spool={spool}
+          onConfirm={handleDeduct}
+          onCancel={() => setShowDeductModal(false)}
+        />
+      )}
+
+      {confirmArchive && spool && (
+        <ConfirmModal
+          title="Archive Spool"
+          message={`Archive "${spool.name}"? It will be hidden from active lists but not deleted.`}
+          confirmLabel="Archive"
+          confirmVariant="danger"
+          onConfirm={handleArchive}
+          onCancel={() => setConfirmArchive(false)}
         />
       )}
     </div>

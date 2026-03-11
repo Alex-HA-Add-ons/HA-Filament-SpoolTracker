@@ -2,6 +2,9 @@
 
 A Home Assistant add-on for tracking 3D printer filament spool usage with automatic Bambu Lab integration.
 
+Home Assistant community thread:  
+[HA Filament SpoolTracker – Filament & Print Job Tracker for Bambu Lab](https://community.home-assistant.io/t/add-on-ha-filament-spooltracker-filament-print-job-tracker-for-bambu-lab-octoprint-planned/994230)
+
 ## Features
 
 - **Spool Management** -- Add, edit, archive, and delete filament spools with color, type, weight tracking, and remaining filament progress bars

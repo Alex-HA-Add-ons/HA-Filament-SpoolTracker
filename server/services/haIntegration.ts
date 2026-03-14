@@ -271,7 +271,7 @@ async function onPrintStarted(
     const taskNameEntity = printer.entityTaskName ?? `sensor.${printerPrefix}_task_name`;
     const printWeightEntity = printer.entityPrintWeight ?? `sensor.${printerPrefix}_print_weight`;
     const coverImageEntity = printer.entityCoverImage ?? `image.${printerPrefix}_cover_image`;
-    const printStartEntity = printer.entityPrintStart ?? `sensor.${printerPrefix}_print_start`;
+    const printStartEntity = (printer as { entityPrintStart?: string | null }).entityPrintStart ?? `sensor.${printerPrefix}_print_start`;
     const projectName = await fetchEntityState(taskNameEntity) || 'Unknown Print';
     const printWeight = await fetchEntityState(printWeightEntity);
     const coverImageHaPath = await fetchEntityValue(coverImageEntity, 'entity_picture');

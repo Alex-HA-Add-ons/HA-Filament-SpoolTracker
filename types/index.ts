@@ -142,7 +142,7 @@ export interface DashboardStats {
   /** Printers with activeSpool for dashboard "loaded spool" quick update */
   printersList: Printer[];
   /** Non-archived spools (id, name, filamentType) for loaded-spool dropdowns */
-  spoolsList: Pick<Spool, 'id' | 'name' | 'filamentType'>[];
+  spoolsList: Pick<Spool, 'id' | 'name' | 'filamentType' | 'color' | 'colorHex'>[];
 }
 
 export interface HAConnectionStatus {

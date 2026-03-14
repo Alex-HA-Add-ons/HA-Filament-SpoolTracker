@@ -1,21 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
-import type { Spool } from '@ha-addon/types';
 import './SpoolSelect.css';
+
+/** Minimal spool shape for dropdown options (dashboard spoolsList is a subset of Spool). */
+export interface SpoolOption {
+  id: string;
+  name: string;
+  filamentType: string;
+  color?: string | null;
+  colorHex?: string | null;
+}
 
 interface SpoolSelectProps {
   value: string | null;
   onChange: (spoolId: string | null) => void;
-  spools: Spool[];
+  spools: SpoolOption[];
   placeholder?: string;
   size?: 'sm' | 'md';
   id?: string;
   'aria-label'?: string;
   /** When set, renders this instead of the default trigger (dot + label). Use to show card-style content. */
-  renderTrigger?: (selected: Spool | null) => React.ReactNode;
+  renderTrigger?: (selected: SpoolOption | null) => React.ReactNode;
   className?: string;
 }
 
-function getSpoolColor(spool: Spool): string {
+function getSpoolColor(spool: SpoolOption): string {
   return spool.colorHex || spool.color || 'var(--text-muted)';
 }
 
@@ -33,7 +41,7 @@ export default function SpoolSelect({
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedSpool = value ? spools.find((s) => s.id === value) : null;
+  const selectedSpool: SpoolOption | null = value ? spools.find((s) => s.id === value) ?? null : null;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

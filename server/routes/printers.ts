@@ -29,6 +29,7 @@ router.post('/printers', async (req: Request, res: Response) => {
 
   try {
     const body: PrinterCreateRequest = req.body;
+    type PrinterCreateData = Parameters<typeof prisma.printer.create>[0]['data'];
     const printer = await prisma.printer.create({
       data: {
         name: body.name,
@@ -41,7 +42,7 @@ router.post('/printers', async (req: Request, res: Response) => {
         entityPrintWeight: body.entityPrintWeight ?? undefined,
         entityCoverImage: body.entityCoverImage ?? undefined,
         entityPrintStart: body.entityPrintStart ?? undefined,
-      },
+      } as unknown as PrinterCreateData,
     });
     res.status(201).json(printer);
   } catch (error) {
@@ -70,9 +71,10 @@ router.put('/printers/:id', async (req: Request, res: Response) => {
     if (body.entityPrintStart !== undefined) data.entityPrintStart = body.entityPrintStart;
     if (body.activeSpoolId !== undefined) data.activeSpoolId = body.activeSpoolId;
 
+    type PrinterUpdateData = Parameters<typeof prisma.printer.update>[0]['data'];
     const printer = await prisma.printer.update({
       where: { id: req.params.id as string },
-      data,
+      data: data as unknown as PrinterUpdateData,
       include: { activeSpool: true },
     });
     // Active spool may have changed — refresh HA sensor.

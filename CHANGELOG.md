@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.25
+## 0.1.26
 
 - Reduce duplicate print jobs: use printer “print start” entity (e.g. `sensor.*_print_start`) to detect same print; add optional `entityPrintStart` to printer config and Edit Printer modal.
 - Printer cards: full-width spool section, icon+label Edit/Remove buttons, and full-width progress/selector; add “Loaded spool” label and improve layout.

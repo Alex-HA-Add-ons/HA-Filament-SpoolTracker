@@ -47,7 +47,7 @@ export default function AddPrintJobModal({ printers, spools, onSave, onClose }: 
     });
   };
 
-  const activeSpools = spools.filter((s) => !s.isArchived);
+  const activeSpools = spools.filter((s) => s.archivedAt === null);
 
   return (
     <div className="modal-overlay" onClick={onClose}>

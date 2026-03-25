@@ -1,0 +1,33 @@
+---
+description: How to update CHANGELOG.md for releases. Read when adding release notes or editing the changelog.
+globs: CHANGELOG.md
+alwaysApply: false
+---
+
+# Changelog
+
+## When to update
+- Add or extend an entry when shipping **user-visible** behavior: UI, HA integration, add-on config, workflows, or operational outcomes (e.g. smoother Docker upgrades).
+- Skip internal-only refactors unless they translate to something users notice (faster, fewer errors, no manual step).
+
+## Structure
+- **Newest release first** under `# Changelog` as `## x.y.z`.
+- One bullet per theme; use bold lead-in text for the benefit (e.g. **See when a spool was archived:**).
+
+## Audience and tone
+- Write for **end users** (add-on / app users), not developers.
+- Describe **what they get** first: what they see, what is easier, what behaves consistently.
+- Avoid implementation jargon: no ORM/migration tool names, no internal field names, no file paths, no “API”/“schema” unless the user must act (rare).
+
+## Where to find it (surfaces)
+- After the benefit, name **places users recognize**: e.g. Spools, Dashboard, Printers, Print history, Settings, Home Assistant, README (for setup-only changes).
+- Put the surface in the **bold lead-in** in parentheses, e.g. `**Pick the right spool (Dashboard & Printers):**`, or weave it into the sentence—keep it to one short phrase, not a full site map.
+- Do **not** list routes (`/spools`), filenames, or components; those belong in commit messages or PRs.
+
+## Examples
+- Prefer: “**Pick the right spool (Dashboard & Printers):** The loaded-spool dropdown shows remaining grams…”
+- Avoid: “`spoolsList` now includes `remainingWeight`.”
+
+## Version alignment
+- The top section’s version should match **`package.json`** and **`config.yaml`** `version` for that release.
+- This repo runs **`scripts/bump-version.js`** on pre-commit, which bumps the patch from `config.yaml`; after a manual changelog edit, confirm versions still match or adjust the hook workflow for that commit.

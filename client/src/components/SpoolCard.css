@@ -71,9 +71,27 @@
   letter-spacing: 0.5px;
 }
 
+.spool-card-header > .spool-active-badge,
+.spool-card-header > .spool-archived-badge {
+  flex-shrink: 0;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .spool-active-badge {
   background: rgba(35, 134, 54, 0.2);
   color: #3fb950;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.spool-archived-badge {
+  background: rgba(110, 118, 129, 0.2);
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;

@@ -30,7 +30,7 @@ export interface Spool {
   spoolWeight: number | null;
   diameter: number;
   isActive: boolean;
-  isArchived: boolean;
+  archivedAt: string | null;
   expirationDate: string | null;
   purchaseDate: string | null;
   notes: string | null;
@@ -81,7 +81,6 @@ export interface SpoolCreateRequest {
 
 export interface SpoolUpdateRequest extends Partial<SpoolCreateRequest> {
   isActive?: boolean;
-  isArchived?: boolean;
 }
 
 export interface DeductionRequest {
@@ -141,8 +140,8 @@ export interface DashboardStats {
   activeSpoolsList: Spool[];
   /** Printers with activeSpool for dashboard "loaded spool" quick update */
   printersList: Printer[];
-  /** Non-archived spools (id, name, filamentType) for loaded-spool dropdowns */
-  spoolsList: Pick<Spool, 'id' | 'name' | 'filamentType' | 'color' | 'colorHex'>[];
+  /** Non-archived spools for loaded-spool dropdowns */
+  spoolsList: Pick<Spool, 'id' | 'name' | 'filamentType' | 'color' | 'colorHex' | 'remainingWeight'>[];
 }
 
 export interface HAConnectionStatus {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.28
+
+- **See when a spool was archived (Spools):** On each spool card, the archived date and time appear in the header—same spot as the green “loaded on printer” label when a spool is active—in year-month-day and time format.
+- **Pick the right spool from the list (Dashboard & Printers):** When choosing which spool is loaded on a printer, the dropdown shows remaining grams as well as name and color, so similar spools are easier to tell apart.
+- **Consistent inactive spools (Spools, Dashboard, Print history, Home Assistant):** Archived spools are treated the same in filters, the dashboard, print history, reminders, and what Home Assistant reflects for active spools.
+- **Easier standalone Docker updates:** If you run the add-on in Docker outside the Home Assistant OS stack (see README), the database updates automatically when the container starts, with fewer manual steps after an upgrade.
+
 ## 0.1.27
 
 - **Standalone Docker run:** Run the add-on in Docker outside Hass.io while still connected to Home Assistant. Refer to the README for instructions.

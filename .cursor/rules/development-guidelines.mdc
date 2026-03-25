@@ -40,3 +40,6 @@ logger.error('message', error);
 - All routes mounted under `/api` prefix
 - Use Express Router pattern
 - Access shared services via `req.app.locals`
+
+## Changelog
+- When documenting a release, follow `.cursor/rules/changelog.mdc` (user-facing bullets, newest first, version aligned with `package.json` / `config.yaml`).

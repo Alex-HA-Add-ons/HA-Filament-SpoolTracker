@@ -14,8 +14,8 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
 
     const [totalSpools, activeSpools, registeredPrinters, activePrintJobs, recentPrintJobs, lowFilamentSpools, allSpools, activeSpoolsList, printersList, spoolsList] =
       await Promise.all([
-        prisma.spool.count({ where: { isArchived: false } }),
-        prisma.spool.count({ where: { isActive: true, isArchived: false } }),
+        prisma.spool.count({ where: { archivedAt: null } }),
+        prisma.spool.count({ where: { isActive: true, archivedAt: null } }),
         prisma.printer.count({ where: { isActive: true } }),
         prisma.printJob.count({ where: { status: 'in_progress' } }),
         prisma.printJob.findMany({
@@ -25,17 +25,17 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
         }),
         prisma.spool.findMany({
           where: {
-            isArchived: false,
+            archivedAt: null,
             remainingWeight: { lte: lowFilamentThreshold },
           },
           orderBy: { remainingWeight: 'asc' },
         }),
         prisma.spool.findMany({
-          where: { isArchived: false },
+          where: { archivedAt: null },
           select: { remainingWeight: true },
         }),
         prisma.spool.findMany({
-          where: { isActive: true, isArchived: false },
+          where: { isActive: true, archivedAt: null },
           orderBy: { name: 'asc' },
         }),
         prisma.printer.findMany({
@@ -43,8 +43,8 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
           include: { activeSpool: true },
         }),
         prisma.spool.findMany({
-          where: { isArchived: false },
-          select: { id: true, name: true, filamentType: true, color: true, colorHex: true },
+          where: { archivedAt: null },
+          select: { id: true, name: true, filamentType: true, color: true, colorHex: true, remainingWeight: true },
           orderBy: { name: 'asc' },
         }),
       ]);

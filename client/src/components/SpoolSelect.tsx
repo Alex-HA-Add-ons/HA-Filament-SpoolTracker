@@ -8,6 +8,8 @@ export interface SpoolOption {
   filamentType: string;
   color?: string | null;
   colorHex?: string | null;
+  /** Remaining filament (g); shown in dropdown and default trigger to disambiguate similar spools */
+  remainingWeight?: number;
 }
 
 interface SpoolSelectProps {
@@ -27,6 +29,11 @@ function getSpoolColor(spool: SpoolOption): string {
   return spool.colorHex || spool.color || 'var(--text-muted)';
 }
 
+function formatRemaining(weight: number | undefined): string | null {
+  if (weight == null || Number.isNaN(weight)) return null;
+  return `${Math.round(weight)}g`;
+}
+
 export default function SpoolSelect({
   value,
   onChange,
@@ -42,6 +49,7 @@ export default function SpoolSelect({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedSpool: SpoolOption | null = value ? spools.find((s) => s.id === value) ?? null : null;
+  const selectedRemainingLabel = formatRemaining(selectedSpool?.remainingWeight);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -87,6 +95,9 @@ export default function SpoolSelect({
                 />
                 <span className="spool-select-label">
                   {selectedSpool.name} ({selectedSpool.filamentType})
+                  {selectedRemainingLabel && (
+                    <span className="spool-select-label-weight"> · {selectedRemainingLabel}</span>
+                  )}
                 </span>
               </>
             ) : (
@@ -113,26 +124,32 @@ export default function SpoolSelect({
           >
             <span className="spool-select-option-none">{placeholder}</span>
           </li>
-          {spools.map((spool) => (
-            <li
-              key={spool.id}
-              role="option"
-              aria-selected={value === spool.id}
-              className="spool-select-option"
-              onClick={() => {
-                onChange(spool.id);
-                setOpen(false);
-              }}
-            >
-              <span
-                className="spool-select-dot"
-                style={{ backgroundColor: getSpoolColor(spool) }}
-              />
-              <span className="spool-select-option-label">
-                {spool.name} ({spool.filamentType})
-              </span>
-            </li>
-          ))}
+          {spools.map((spool) => {
+            const remainingLabel = formatRemaining(spool.remainingWeight);
+            return (
+              <li
+                key={spool.id}
+                role="option"
+                aria-selected={value === spool.id}
+                className="spool-select-option"
+                onClick={() => {
+                  onChange(spool.id);
+                  setOpen(false);
+                }}
+              >
+                <span
+                  className="spool-select-dot"
+                  style={{ backgroundColor: getSpoolColor(spool) }}
+                />
+                <span className="spool-select-option-label">
+                  {spool.name} ({spool.filamentType})
+                </span>
+                {remainingLabel && (
+                  <span className="spool-select-option-weight">{remainingLabel}</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

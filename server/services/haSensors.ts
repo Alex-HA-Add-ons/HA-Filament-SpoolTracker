@@ -60,7 +60,7 @@ export async function publishActiveSpoolSensor(): Promise<void> {
       // Fallback: any spool with loadedOnPrinter or legacy isActive.
       const activeSpools = await prisma.spool.findMany({
         where: {
-          isArchived: false,
+          archivedAt: null,
           OR: [
             { loadedOnPrinter: { isNot: null } },
             { isActive: true },

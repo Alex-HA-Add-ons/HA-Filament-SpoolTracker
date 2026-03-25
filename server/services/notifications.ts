@@ -64,7 +64,7 @@ export async function checkExpiringSpools(): Promise<void> {
 
     const expiringSpools = await prisma.spool.findMany({
       where: {
-        isArchived: false,
+        archivedAt: null,
         expirationDate: {
           lte: warningDate,
           gte: new Date(),

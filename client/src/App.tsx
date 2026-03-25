@@ -35,7 +35,8 @@ function App() {
 
   useEffect(() => {
     // Close mobile nav when route changes
-    setNavOpen(false);
+    // Schedule the state update to avoid synchronous state updates during render/effect phases.
+    setTimeout(() => setNavOpen(false), 0);
   }, [pathname]);
 
   const handleTabChange = (tabId: string) => {

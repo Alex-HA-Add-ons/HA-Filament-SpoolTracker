@@ -119,7 +119,7 @@ export default function SpoolDetailPage() {
           <button className="btn btn-secondary btn-sm" onClick={() => setShowEditModal(true)}>
             Edit
           </button>
-          {!spool.isArchived && (
+          {spool.archivedAt === null && (
             <button className="btn btn-danger btn-sm" onClick={() => setConfirmArchive(true)}>
               Archive
             </button>

@@ -14,9 +14,15 @@ router.get('/spools', async (req: Request, res: Response) => {
   try {
     const { status } = req.query;
     const where: Record<string, unknown> = {};
-    if (status === 'active') { where.isActive = true; where.isArchived = false; }
-    else if (status === 'archived') { where.isArchived = true; }
-    else { where.isArchived = false; }
+    if (status === 'active') {
+      where.isActive = true;
+      where.archivedAt = null;
+    } else if (status === 'archived') {
+      where.archivedAt = { not: null };
+    } else {
+      // Default: show only non-archived spools (used by "all" + "low" filters).
+      where.archivedAt = null;
+    }
 
     const spools = await prisma.spool.findMany({
       where,
@@ -106,7 +112,6 @@ router.put('/spools/:id', async (req: Request, res: Response) => {
     if (body.spoolWeight !== undefined) data.spoolWeight = body.spoolWeight;
     if (body.diameter !== undefined) data.diameter = body.diameter;
     if (body.isActive !== undefined) data.isActive = body.isActive;
-    if (body.isArchived !== undefined) data.isArchived = body.isArchived;
     if (body.expirationDate !== undefined) data.expirationDate = body.expirationDate ? new Date(body.expirationDate) : null;
     if (body.purchaseDate !== undefined) data.purchaseDate = body.purchaseDate ? new Date(body.purchaseDate) : null;
     if (body.notes !== undefined) data.notes = body.notes;
@@ -169,7 +174,7 @@ router.post('/spools/:id/archive', async (req: Request, res: Response) => {
   try {
     const spool = await prisma.spool.update({
       where: { id: req.params.id as string },
-      data: { isArchived: true, isActive: false },
+      data: { isActive: false, archivedAt: new Date() },
     });
     await publishActiveSpoolSensor();
     res.json(spool);
@@ -186,7 +191,7 @@ router.post('/spools/:id/activate', async (req: Request, res: Response) => {
   try {
     const spool = await prisma.spool.update({
       where: { id: req.params.id as string },
-      data: { isActive: true, isArchived: false },
+      data: { isActive: true, archivedAt: null },
     });
     await publishActiveSpoolSensor();
     res.json(spool);

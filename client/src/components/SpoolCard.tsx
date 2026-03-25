@@ -17,6 +17,14 @@ export default function SpoolCard({ spool, onEdit, onDeduct, onArchive, onDelete
   const isLow = spool.remainingWeight <= 100;
   const isActive = spool.isActive || !!spool.loadedOnPrinter;
 
+  const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  };
+
+  const archivedAtDisplay = spool.archivedAt ? formatDateTime(spool.archivedAt) : null;
+
   return (
     <div className={`spool-card ${isActive ? 'active' : ''} ${isLow ? 'low' : ''}`}>
       <div className="spool-card-header">
@@ -31,11 +39,15 @@ export default function SpoolCard({ spool, onEdit, onDeduct, onArchive, onDelete
           )}
           <span className="spool-type-badge">{spool.filamentType}</span>
         </div>
-        {isActive && (
+        {archivedAtDisplay ? (
+          <span className="spool-archived-badge" title={`Archived ${archivedAtDisplay}`}>
+            {archivedAtDisplay}
+          </span>
+        ) : isActive ? (
           <span className="spool-active-badge" title={spool.loadedOnPrinter ? `Loaded on ${spool.loadedOnPrinter.name}` : undefined}>
             {spool.loadedOnPrinter ? `On ${spool.loadedOnPrinter.name}` : 'Active'}
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="spool-card-body">

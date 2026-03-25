@@ -234,7 +234,7 @@ export default function PrintHistoryPage() {
               <label>Spool</label>
               <select value={selectedSpoolId} onChange={(e) => setSelectedSpoolId(e.target.value)}>
                 <option value="">Select a spool...</option>
-                {spools.filter((s) => !s.isArchived).map((s) => (
+                {spools.filter((s) => s.archivedAt === null).map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.filamentType}, {Math.round(s.remainingWeight)}g left)
                   </option>

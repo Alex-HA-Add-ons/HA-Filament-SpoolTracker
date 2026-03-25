@@ -51,7 +51,7 @@ model Spool {
   spoolWeight     Float?    @map("spool_weight")
   diameter        Float     @default(1.75)
   isActive        Boolean   @default(false) @map("is_active")
-  isArchived      Boolean   @default(false) @map("is_archived")
+  archivedAt      DateTime? @map("archived_at")
   expirationDate  DateTime? @map("expiration_date")
   purchaseDate    DateTime? @map("purchase_date")
   notes           String?

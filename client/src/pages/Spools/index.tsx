@@ -30,7 +30,7 @@ export default function SpoolsPage() {
       const response = await spoolsApi.getAll(status);
       const allSpools = response.data;
       if (filter === 'low') {
-        setSpools(allSpools.filter((s) => !s.isArchived && s.remainingWeight <= LOW_FILAMENT_THRESHOLD));
+        setSpools(allSpools.filter((s) => s.archivedAt === null && s.remainingWeight <= LOW_FILAMENT_THRESHOLD));
       } else {
         setSpools(allSpools);
       }

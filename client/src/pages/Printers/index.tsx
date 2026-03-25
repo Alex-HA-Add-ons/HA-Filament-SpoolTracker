@@ -200,7 +200,7 @@ export default function PrintersPage() {
                         <SpoolSelect
                           value={printer.activeSpoolId ?? null}
                           onChange={(id) => handleLoadedSpoolChange(printer, id)}
-                          spools={spools.filter((s) => !s.isArchived)}
+                          spools={spools.filter((s) => s.archivedAt === null)}
                           placeholder="None"
                           aria-label="Change loaded spool"
                         />
@@ -209,7 +209,7 @@ export default function PrintersPage() {
                     <SpoolSelect
                       value={null}
                       onChange={(id) => handleLoadedSpoolChange(printer, id)}
-                      spools={spools.filter((s) => !s.isArchived)}
+                        spools={spools.filter((s) => s.archivedAt === null)}
                       placeholder="Select spool…"
                       aria-label="Select loaded spool"
                     />

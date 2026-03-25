@@ -268,7 +268,7 @@ export default function EditPrinterModal({ printer, spools = [], onSave, onClose
               onChange={(e) => setActiveSpoolId(e.target.value)}
             >
               <option value="">None</option>
-              {spools.filter((s) => !s.isArchived).map((s) => (
+              {spools.filter((s) => s.archivedAt === null).map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.filamentType})
                 </option>

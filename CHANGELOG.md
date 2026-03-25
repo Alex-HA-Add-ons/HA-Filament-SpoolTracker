@@ -6,6 +6,7 @@
 - **Pick the right spool from the list (Dashboard & Printers):** When choosing which spool is loaded on a printer, the dropdown shows remaining grams as well as name and color, so similar spools are easier to tell apart.
 - **Consistent inactive spools (Spools, Dashboard, Print history, Home Assistant):** Archived spools are treated the same in filters, the dashboard, print history, reminders, and what Home Assistant reflects for active spools.
 - **Easier standalone Docker updates:** If you run the add-on in Docker outside the Home Assistant OS stack (see README), the database updates automatically when the container starts, with fewer manual steps after an upgrade.
+- **Home Assistant add-on:** Startup now applies the same migration step as standalone Docker instead of a schema “push,” so upgrades add archived-spool timestamps correctly and avoid failed syncs that left the database out of date (which could break the active-spool sensor).
 
 ## 0.1.27
 

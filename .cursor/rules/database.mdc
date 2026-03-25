@@ -25,7 +25,7 @@ Database is **optional** — the server boots and runs without any `DATABASE_URL
 
 ## Commands
 - `pnpm --filter @ha-addon/server db:migrate` — Create migration
-- `pnpm --filter @ha-addon/server db:migrate:deploy` — Apply migrations
+- `pnpm --filter @ha-addon/server db:migrate:deploy` — Apply migrations (**use in production**: Home Assistant `run.sh`, standalone `run-standalone.sh`, releases)
 - `pnpm --filter @ha-addon/server db:generate` — Generate Prisma client
-- `pnpm --filter @ha-addon/server db:push` — Push schema to DB
+- `pnpm --filter @ha-addon/server db:push` — Push schema to DB (**local dev only**; do not use for add-on/standalone—can drop columns without running backfill SQL and fails on data-loss prompts)
 - `pnpm --filter @ha-addon/server db:studio` — Visual DB browser

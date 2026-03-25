@@ -30,8 +30,14 @@ else
   bashio::log.info "No database URL configured — using local SQLite at /data/app.db"
 fi
 
-bashio::log.info "Syncing database schema..."
-pnpm prisma:migrate || bashio::log.warning "Schema sync failed — continuing without database"
+# migrate deploy runs ordered SQL migrations (backfill archived_at, then drop is_archived).
+# db push is unsafe here: it would drop is_archived without backfill and abort on data-loss warnings.
+bashio::log.info "Applying database migrations..."
+if ! pnpm --filter @ha-addon/server db:migrate:deploy; then
+  bashio::log.warning "Migrate deploy failed — attempting baseline for existing database..."
+  pnpm --filter @ha-addon/server exec prisma migrate resolve --applied 20260325204348_init_baseline || true
+  pnpm --filter @ha-addon/server db:migrate:deploy || bashio::log.warning "Migrations failed — continuing (app may error until the database is fixed)"
+fi
 
 bashio::log.info "Starting application on port $PORT..."
 pnpm start

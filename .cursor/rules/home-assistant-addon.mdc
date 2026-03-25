@@ -21,4 +21,4 @@ root/
 ## Development
 - `pnpm addon:build` - Build Docker image locally
 - PostgreSQL connection string comes from HA config options
-- `run.sh` loads config with `bashio`, runs migrations, then starts the server
+- `run.sh` loads config with `bashio`, runs `prisma migrate deploy` (with baseline resolve fallback for legacy DBs—same idea as `run-standalone.sh`), then starts the server. Do not use `db:push` on startup.

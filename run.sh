@@ -7,6 +7,11 @@ LOG_LEVEL=$(bashio::config 'log_level')
 
 INGRESS_PORT=$(bashio::addon.ingress_port)
 ADDON_VERSION=$(bashio::addon.version)
+ADDON_HOSTNAME=$(bashio::addon.hostname)
+ADDON_INGRESS_URL=$(bashio::addon.ingress_url)
+
+export ADDON_HOSTNAME
+export ADDON_INGRESS_URL
 
 bashio::log.info "Starting HA Filament SpoolTracker v${ADDON_VERSION}..."
 

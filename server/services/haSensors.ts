@@ -118,3 +118,63 @@ export async function publishActiveSpoolSensor(): Promise<void> {
   }
 }
 
+/**
+ * Publish a sensor listing non-archived spools (count in state; details in attributes for templates).
+ */
+export async function publishAvailableSpoolsSensor(): Promise<void> {
+  const prisma = getPrismaClient();
+  if (!prisma) return;
+
+  const entityId = 'sensor.spooltracker_available_spools';
+
+  try {
+    const [spools, printers] = await Promise.all([
+      prisma.spool.findMany({
+        where: { archivedAt: null },
+        orderBy: { name: 'asc' },
+      }),
+      prisma.printer.findMany({
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, activeSpoolId: true },
+      }),
+    ]);
+
+    const loadedBySpoolId = new Map<string, { id: string; name: string }>();
+    for (const p of printers) {
+      if (p.activeSpoolId) {
+        loadedBySpoolId.set(p.activeSpoolId, { id: p.id, name: p.name });
+      }
+    }
+
+    const spoolAttrs = spools.map((s) => {
+      const loaded = loadedBySpoolId.get(s.id);
+      return {
+        id: s.id,
+        name: s.name,
+        filament_type: s.filamentType,
+        color: s.color,
+        color_hex: s.colorHex ?? s.color,
+        remaining_g: Math.round(s.remainingWeight ?? 0),
+        ...(loaded
+          ? { loaded_on_printer_id: loaded.id, loaded_on_printer_name: loaded.name }
+          : {}),
+      };
+    });
+
+    const printerAttrs = printers.map((p) => ({ id: p.id, name: p.name }));
+
+    await setHASensorState(entityId, String(spools.length), {
+      friendly_name: 'SpoolTracker Available Spools',
+      spools: spoolAttrs,
+      printers: printerAttrs,
+      updated: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.error('Failed to publish available spools sensor:', err);
+  }
+}
+
+export async function publishAllSpooltrackerHASensors(): Promise<void> {
+  await publishActiveSpoolSensor();
+  await publishAvailableSpoolsSensor();
+}

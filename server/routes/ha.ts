@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { LOG } from '../utils/logger';
 import { getHABaseUrl } from '../utils/haUrl';
+import { getPrismaClient } from '../database';
+import { assignActiveSpoolToPrinter, AssignSpoolError } from '../services/assignActiveSpool';
+import { publishAllSpooltrackerHASensors } from '../services/haSensors';
 
 const logger = LOG('HA');
 const router: Router = Router();
@@ -151,6 +154,38 @@ router.get('/ha/entities/states', async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Failed to fetch entity states:', error);
     res.json({});
+  }
+});
+
+router.post('/ha/set-active-spool', async (req: Request, res: Response) => {
+  const prisma = getPrismaClient();
+  if (!prisma) return res.status(503).json({ error: 'Database not available' });
+
+  const spoolId = typeof req.body?.spoolId === 'string' ? req.body.spoolId.trim() : '';
+  if (!spoolId) {
+    return res.status(400).json({ error: 'spoolId is required' });
+  }
+
+  let printerId: string | undefined =
+    typeof req.body?.printerId === 'string' ? req.body.printerId.trim() : undefined;
+  if (!printerId) {
+    const printers = await prisma.printer.findMany({ select: { id: true } });
+    if (printers.length !== 1) {
+      return res.status(400).json({ error: 'printerId is required when multiple printers exist' });
+    }
+    printerId = printers[0].id;
+  }
+
+  try {
+    const printer = await assignActiveSpoolToPrinter(prisma, printerId, spoolId);
+    await publishAllSpooltrackerHASensors();
+    res.json(printer);
+  } catch (err) {
+    if (err instanceof AssignSpoolError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    logger.error('set-active-spool failed:', err);
+    res.status(500).json({ error: 'Failed to set active spool' });
   }
 });
 

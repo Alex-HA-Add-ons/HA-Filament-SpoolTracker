@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.30
+
+- **See the add-on URL in logs (Home Assistant):** On startup, the add-on log shows the API base address for automations and the ingress line for the sidebar UI.
+- **Spool list in Home Assistant:** A second sensor lists how many spools you have and includes spool and printer details in attributes for dashboards and scripts.
+- **Load a spool from Home Assistant (README):** You can call the add-on’s HTTP API from a [RESTful Command](https://www.home-assistant.io/integrations/rest_command/) automation to set which spool is on a printer; the README explains the JSON body and when to include the printer ID.
+
 ## 0.1.28
 
 - **See when a spool was archived (Spools):** On each spool card, the archived date and time appear in the header—same spot as the green “loaded on printer” label when a spool is active—in year-month-day and time format.

@@ -1,6 +1,6 @@
 {
   "name": "ha-filament-spooltracker",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "description": "Track 3D printer filament spool usage with Bambu Lab integration for Home Assistant",
   "main": "server/index.js",
   "scripts": {

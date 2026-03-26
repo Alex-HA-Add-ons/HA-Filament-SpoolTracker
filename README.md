@@ -82,6 +82,25 @@ The add-on sends Home Assistant persistent notifications for:
 
 Notification thresholds can be adjusted in the **Settings** tab.
 
+### Home Assistant sensors and automations
+
+The add-on publishes state back into Home Assistant (needs a valid `SUPERVISOR_TOKEN` / long-lived token as today):
+
+- **`sensor.spooltracker_active_spool_remaining_g`** — grams remaining on the active spool (existing).
+- **`sensor.spooltracker_available_spools`** — count of non-archived spools; attributes `spools` and `printers` list IDs and names for use in templates (e.g. `state_attr`).
+
+**API base URL for automations:** After each start, open **Settings → Add-ons → HA Filament SpoolTracker → Log**. In the **SpoolTracker endpoints** block, copy the line that ends with `/api` (host and port are set by Supervisor). Standalone Docker: use the same lines from the container logs and your published host/port if Home Assistant reaches the app over the LAN.
+
+**Load a spool from an automation:** `POST` JSON to `{apiBase}/ha/set-active-spool` with `Content-Type: application/json` and body:
+
+```json
+{ "spoolId": "<spool-uuid>", "printerId": "<printer-uuid>" }
+```
+
+If you only have **one** printer registered in SpoolTracker, you may omit `printerId`. With multiple printers, `printerId` is required.
+
+Configure this using Home Assistant’s **[RESTful Command](https://www.home-assistant.io/integrations/rest_command/)** integration (`rest_command` in `configuration.yaml`), then call `rest_command.your_command_name` from an automation. See [Using a REST command as an action in an automation](https://www.home-assistant.io/integrations/rest_command/#using-a-rest-command-as-an-action-in-an-automation).
+
 ### Spool Lifecycle
 
 | State | Meaning |

@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express';
 import { getPrismaClient } from '../database';
 import { LOG } from '../utils/logger';
 import type { PrinterCreateRequest, PrinterUpdateRequest } from '@ha-addon/types';
-import { publishActiveSpoolSensor } from '../services/haSensors';
+import { publishAllSpooltrackerHASensors } from '../services/haSensors';
+import { assignActiveSpoolToPrinter, AssignSpoolError } from '../services/assignActiveSpool';
 
 const logger = LOG('PRINTERS');
 const router: Router = Router();
@@ -55,10 +56,18 @@ router.put('/printers/:id', async (req: Request, res: Response) => {
   const prisma = getPrismaClient();
   if (!prisma) return res.status(503).json({ error: 'Database not available' });
 
+  const id = req.params.id as string;
+
   try {
     const body: PrinterUpdateRequest = req.body;
-    const data: Record<string, unknown> = {};
 
+    let printer: Awaited<ReturnType<typeof assignActiveSpoolToPrinter>> | undefined;
+
+    if (body.activeSpoolId !== undefined) {
+      printer = await assignActiveSpoolToPrinter(prisma, id, body.activeSpoolId);
+    }
+
+    const data: Record<string, unknown> = {};
     if (body.name !== undefined) data.name = body.name;
     if (body.haDeviceId !== undefined) data.haDeviceId = body.haDeviceId;
     if (body.entityPrefix !== undefined) data.entityPrefix = body.entityPrefix;
@@ -69,18 +78,26 @@ router.put('/printers/:id', async (req: Request, res: Response) => {
     if (body.entityPrintWeight !== undefined) data.entityPrintWeight = body.entityPrintWeight;
     if (body.entityCoverImage !== undefined) data.entityCoverImage = body.entityCoverImage;
     if (body.entityPrintStart !== undefined) data.entityPrintStart = body.entityPrintStart;
-    if (body.activeSpoolId !== undefined) data.activeSpoolId = body.activeSpoolId;
 
-    type PrinterUpdateData = Parameters<typeof prisma.printer.update>[0]['data'];
-    const printer = await prisma.printer.update({
-      where: { id: req.params.id as string },
-      data: data as unknown as PrinterUpdateData,
-      include: { activeSpool: true },
-    });
-    // Active spool may have changed — refresh HA sensor.
-    await publishActiveSpoolSensor();
+    if (Object.keys(data).length > 0) {
+      type PrinterUpdateData = Parameters<typeof prisma.printer.update>[0]['data'];
+      printer = await prisma.printer.update({
+        where: { id },
+        data: data as unknown as PrinterUpdateData,
+        include: { activeSpool: true },
+      });
+    }
+
+    if (!printer) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    await publishAllSpooltrackerHASensors();
     res.json(printer);
   } catch (error) {
+    if (error instanceof AssignSpoolError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
     logger.error('Failed to update printer:', error);
     res.status(500).json({ error: 'Failed to update printer' });
   }

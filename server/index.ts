@@ -10,12 +10,41 @@ import routes from './routes';
 import { LOG } from './utils/logger';
 import { startHAIntegration } from './services/haIntegration';
 import { startPeriodicChecks } from './services/notifications';
-import { publishActiveSpoolSensor } from './services/haSensors';
+import { publishAllSpooltrackerHASensors } from './services/haSensors';
 
 const logger = LOG('SERVER');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = Number(process.env.PORT) || 3000;
+
+function logStartupEndpoints(listenPort: number): void {
+  const p = String(listenPort);
+  logger.info('--- SpoolTracker endpoints ---');
+  logger.info(`Listening on port ${p} (this process)`);
+
+  if (process.env.HOME_ASSISTANT === 'true') {
+    const hostname = process.env.ADDON_HOSTNAME;
+    const ingress = process.env.ADDON_INGRESS_URL;
+
+    if (hostname) {
+      logger.info(
+        `API on supervisor Docker network (e.g. rest_command): http://${hostname}:${p}/api`,
+      );
+    } else {
+      logger.info(
+        `API: http://127.0.0.1:${p}/api — use your host IP and published port in rest_command if Home Assistant is not on this container network`,
+      );
+    }
+
+    if (ingress) {
+      logger.info(`Ingress (sidebar web UI): ${ingress}`);
+    }
+  } else {
+    logger.info(`API: http://127.0.0.1:${p}/api`);
+  }
+
+  logger.info('------------------------------');
+}
 
 app.use(cors({
   origin: [
@@ -55,16 +84,16 @@ async function startServer() {
   setupGracefulShutdown();
 
   const server = app.listen(port, () => {
-    logger.info(`Server running on port ${port}`);
+    logStartupEndpoints(port);
 
     startHAIntegration().catch((err) =>
       logger.warn('HA integration failed to start:', err)
     );
     startPeriodicChecks();
 
-    // Publish initial active spool state so HA has data immediately.
-    publishActiveSpoolSensor().catch((err) =>
-      logger.warn('Failed to publish active spool sensor on startup:', err)
+    // Publish initial HA sensors so Home Assistant has data immediately.
+    publishAllSpooltrackerHASensors().catch((err) =>
+      logger.warn('Failed to publish SpoolTracker HA sensors on startup:', err)
     );
 
     logger.info('Startup completed successfully');

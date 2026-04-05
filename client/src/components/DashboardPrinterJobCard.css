@@ -13,6 +13,16 @@
   overflow: hidden;
 }
 
+.dashboard-printer-job-card--spool-short {
+  border-color: var(--warning-color);
+  box-shadow: inset 0 0 0 1px rgba(248, 81, 73, 0.25);
+  background: linear-gradient(
+    135deg,
+    var(--bg-secondary) 0%,
+    rgba(248, 81, 73, 0.06) 100%
+  );
+}
+
 .dashboard-printer-job-card--idle {
   display: flex;
   flex-direction: row;
@@ -61,7 +71,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
   min-width: 0;
   padding: var(--spacing-md);
   justify-content: center;
@@ -101,40 +111,23 @@
 
 .dashboard-printer-job-progress {
   width: 100%;
-}
-
-.dashboard-printer-job-stats {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-sm) var(--spacing-md);
-  font-size: 12px;
-}
-
-.dashboard-printer-job-stat {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.dashboard-printer-job-progress .progress-bar-container {
+  flex: 1;
   min-width: 0;
 }
 
-.dashboard-printer-job-stat dt {
-  margin: 0;
-  color: var(--text-muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  font-size: 11px;
-}
-
-.dashboard-printer-job-stat dd {
-  margin: 0;
-  color: var(--text-primary);
+.dashboard-printer-job-progress-used {
+  font-size: 12px;
   font-weight: 600;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  min-width: 44px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

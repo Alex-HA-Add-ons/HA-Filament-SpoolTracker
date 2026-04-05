@@ -180,6 +180,7 @@ export default function DashboardPage() {
                 <DashboardPrinterJobCard
                   job={jobByPrinterId.get(printer.id) ?? null}
                   live={liveByPrinter[printer.id]}
+                  loadedSpoolRemainingGrams={printer.activeSpool?.remainingWeight ?? null}
                 />
               </div>
             ))}

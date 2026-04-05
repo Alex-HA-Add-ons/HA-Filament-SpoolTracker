@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { printersApi, haApi, spoolsApi } from '@services/api';
 import type { Printer, Spool, HAConnectionStatus, HADiscoveredEntity } from '@ha-addon/types';
 import EditPrinterModal, { type EditPrinterSaveData } from '@modals/EditPrinterModal';
@@ -11,6 +11,7 @@ import './index.css';
 
 export default function PrintersPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [haStatus, setHaStatus] = useState<HAConnectionStatus | null>(null);
   const [discoveredEntities, setDiscoveredEntities] = useState<HADiscoveredEntity[]>([]);
@@ -37,6 +38,36 @@ export default function PrintersPage() {
     };
     loadAll();
   }, []);
+
+  const focusPrinterId = searchParams.get('focus');
+
+  useEffect(() => {
+    if (!focusPrinterId || printers.length === 0) return;
+
+    const stripFocus = () =>
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('focus');
+          return next;
+        },
+        { replace: true }
+      );
+
+    const el = document.getElementById(`printer-card-${focusPrinterId}`);
+    if (!el) {
+      stripFocus();
+      return;
+    }
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    el.classList.add('printer-card--focused');
+    const t = window.setTimeout(() => {
+      el.classList.remove('printer-card--focused');
+      stripFocus();
+    }, 2200);
+    return () => window.clearTimeout(t);
+  }, [focusPrinterId, printers, setSearchParams]);
 
   const handleDiscoverEntities = async () => {
     setDiscovering(true);
@@ -145,7 +176,7 @@ export default function PrintersPage() {
           <h3 className="section-title">Registered Printers</h3>
           <div className="printer-cards">
             {printers.map((printer) => (
-              <div key={printer.id} className="printer-card">
+              <div key={printer.id} id={`printer-card-${printer.id}`} className="printer-card">
                 <div className="printer-card-top">
                   <div className="printer-card-icon">🖨️</div>
                   <div className="printer-card-heading">

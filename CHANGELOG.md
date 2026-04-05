@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.31
+## 0.1.32
 - **Live print next to loaded spool (Dashboard):** Each printer row shows the active job in a larger card—tall preview image, progress bar (including a working “unknown progress” state), **Filament used** that updates as Home Assistant reports usage, and **ETA** when your integration exposes remaining time for that printer (otherwise a dash).
 - **Print progress from Home Assistant (Printers):** In **Edit printer**, you can set the monitored **print progress** entity (with discover / refresh like other sensors). SpoolTracker keeps job progress and grams-used in sync from Home Assistant during a print and during periodic checks.
 - **Change status with filament safety (Print history):** Replace the status badge with a menu to set In progress, Completed, Failed, or Cancelled. Completing can **deduct** recorded grams from the linked spool or **skip** deduction; leaving **Completed** can **restore** grams to the spool or change status only—so you stay in control of inventory.

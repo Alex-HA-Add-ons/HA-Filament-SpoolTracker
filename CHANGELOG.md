@@ -9,7 +9,9 @@
 - **More finish types and clearer swatches (Spools, Dashboard, Spool detail, add spool):** Extra finish choices for specialty filament, material + finish chips that match the spool list, and updated dots so solid, matte, translucent, and silk reads are easier to tell apart at a glance.
 - **Activate lines up with the printer (Spools, Printers, Dashboard):** Marking a spool active sets it as the loaded spool on the right printer so “active,” the selector, and what you’re tracking stay in sync.
 - **Reassign or unlink a print’s spool (Print history):** Change which spool a job is tied to using the same picker as elsewhere; for completed prints that already used filament, you confirm whether to move grams back to the old spool, take them from the new one, or only change the link.
+
 ## 0.1.32
+
 - **Live print next to loaded spool (Dashboard):** Each printer row shows the active job in a larger card—tall preview image, progress bar (including a working “unknown progress” state), **Filament used** that updates as Home Assistant reports usage, and **ETA** when your integration exposes remaining time for that printer (otherwise a dash).
 - **Print progress from Home Assistant (Printers):** In **Edit printer**, you can set the monitored **print progress** entity (with discover / refresh like other sensors). SpoolTracker keeps job progress and grams-used in sync from Home Assistant during a print and during periodic checks.
 - **Change status with filament safety (Print history):** Replace the status badge with a menu to set In progress, Completed, Failed, or Cancelled. Completing can **deduct** recorded grams from the linked spool or **skip** deduction; leaving **Completed** can **restore** grams to the spool or change status only—so you stay in control of inventory.

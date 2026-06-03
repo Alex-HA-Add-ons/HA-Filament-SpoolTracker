@@ -3,10 +3,13 @@ packages:
   - server
   - types
 
-onlyBuiltDependencies:
-  - '@prisma/client'
-  - '@prisma/engines'
-  - better-sqlite3
-  - esbuild
-  - prisma
-  - simple-git-hooks
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+  simple-git-hooks: true
+
+# Git hooks have no TTY; don't prompt before purging node_modules
+confirmModulesPurge: false

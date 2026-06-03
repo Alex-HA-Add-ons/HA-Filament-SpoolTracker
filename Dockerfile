@@ -6,7 +6,7 @@ ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
 # linux/amd64 — Supervisor builds with `--platform linux/arm64` but does not pass TARGETPLATFORM;
 # a wrong default yields amd64 Node on arm64 and `Exec format error` when RUN invokes node.
 # With buildx, `FROM node:…` inherits the request `--platform` for this stage (same as BASE_FROM).
-FROM node:20-alpine AS node_upstream
+FROM node:22-alpine AS node_upstream
 
 # ---------------------------------------------------------------------------
 # Shared stack: Home Assistant OS + Node + pnpm — used by builder and runtime.
@@ -24,12 +24,14 @@ COPY --from=node_upstream /usr/local/bin/node /usr/local/bin/node
 COPY --from=node_upstream /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
-    && npm install -g pnpm@8
+    && npm install -g pnpm@11
 
 # ---------------------------------------------------------------------------
 # Build stage — extends base with toolchain only (not shipped in final image).
 # ---------------------------------------------------------------------------
 FROM base AS builder
+
+ENV CI=1
 
 RUN apk add --no-cache git python3 make g++ && rm -rf /var/cache/apk/*
 
@@ -41,8 +43,8 @@ COPY server/package.json ./server/
 COPY client/package.json ./client/
 COPY types/package.json ./types/
 
-# Install dependencies (handle lockfile version differences)
-RUN pnpm install --force || pnpm install
+# pnpm 11 + lockfile v9; allowBuilds whitelists native install scripts
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY server/ ./server/

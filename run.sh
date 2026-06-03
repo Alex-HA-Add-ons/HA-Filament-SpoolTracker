@@ -23,6 +23,7 @@ export ADDON_VERSION="$ADDON_VERSION"
 export APP_ROOT="/app"
 export SERVER_PATH="/app/server"
 export CLIENT_PATH="/app/client"
+PRISMA_BIN="$APP_ROOT/node_modules/.bin/prisma"
 
 cd "$APP_ROOT"
 
@@ -38,11 +39,12 @@ fi
 # migrate deploy runs ordered SQL migrations (backfill archived_at, then drop is_archived).
 # db push is unsafe here: it would drop is_archived without backfill and abort on data-loss warnings.
 bashio::log.info "Applying database migrations..."
-if ! pnpm --filter @ha-addon/server db:migrate:deploy; then
+cd "$SERVER_PATH"
+if ! "$PRISMA_BIN" migrate deploy; then
   bashio::log.warning "Migrate deploy failed — attempting baseline for existing database..."
-  pnpm --filter @ha-addon/server exec prisma migrate resolve --applied 20260325204348_init_baseline || true
-  pnpm --filter @ha-addon/server db:migrate:deploy || bashio::log.warning "Migrations failed — continuing (app may error until the database is fixed)"
+  "$PRISMA_BIN" migrate resolve --applied 20260325204348_init_baseline || true
+  "$PRISMA_BIN" migrate deploy || bashio::log.warning "Migrations failed — continuing (app may error until the database is fixed)"
 fi
 
 bashio::log.info "Starting application on port $PORT..."
-pnpm start
+exec node "$SERVER_PATH/dist/server/index.js"

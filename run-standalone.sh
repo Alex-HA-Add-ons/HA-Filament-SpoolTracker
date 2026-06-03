@@ -20,6 +20,7 @@ export APP_ROOT="${APP_ROOT:-/app}"
 export SERVER_PATH="${SERVER_PATH:-/app/server}"
 export CLIENT_PATH="${CLIENT_PATH:-/app/client}"
 export DATABASE_URL="${DATABASE_URL:-file:/data/app.db}"
+PRISMA_BIN="$APP_ROOT/node_modules/.bin/prisma"
 
 cd "$APP_ROOT"
 
@@ -42,11 +43,12 @@ fi
 # migration as already applied so only real deltas (archived_at, etc.) run. Without this
 # fallback, those installs keep failing deploy until someone runs migrate resolve manually.
 echo "Applying Prisma migrations..."
-if ! pnpm --filter @ha-addon/server db:migrate:deploy; then
+cd "$SERVER_PATH"
+if ! "$PRISMA_BIN" migrate deploy; then
   echo "Prisma migrate deploy failed — attempting baseline for existing database..."
-  pnpm --filter @ha-addon/server exec prisma migrate resolve --applied 20260325204348_init_baseline || true
-  pnpm --filter @ha-addon/server db:migrate:deploy || echo "Schema migration failed — continuing without database"
+  "$PRISMA_BIN" migrate resolve --applied 20260325204348_init_baseline || true
+  "$PRISMA_BIN" migrate deploy || echo "Schema migration failed — continuing without database"
 fi
 
 echo "Starting application on port $PORT..."
-exec pnpm start
+exec node "$SERVER_PATH/dist/server/index.js"
